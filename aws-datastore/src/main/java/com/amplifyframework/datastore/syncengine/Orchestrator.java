@@ -43,7 +43,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Action;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -312,12 +314,12 @@ public final class Orchestrator {
                 long startTime = System.currentTimeMillis();
                 LOG.debug("About to hydrate...");
                 try {
-                    boolean subscribed = syncProcessor.hydrate()
-                            .blockingAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
+                    syncProcessor.hydrate().subscribe(() -> LOG.warn("hydrate complete."));
+//                            .blockingAwait(adjustedTimeoutSeconds, TimeUnit.SECONDS);
+//                    if (!subscribed) {
+//                        throw new TimeoutException("Timed out while performing initial model sync.");
+//                    }
                     LOG.debug("Hydration complete in " + (System.currentTimeMillis() - startTime) + "ms");
-                    if (!subscribed) {
-                        throw new TimeoutException("Timed out while performing initial model sync.");
-                    }
                 } catch (Throwable failure) {
                     if (!emitter.isDisposed()) {
                         emitter.onError(new DataStoreException(

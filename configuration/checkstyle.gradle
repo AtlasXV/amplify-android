@@ -20,7 +20,7 @@ task checkstyle(type: Checkstyle) {
     configFile = rootProject.file("configuration/checkstyle-rules.xml")
     source = javaSources()
     classpath = files()
-    ignoreFailures = false
+    ignoreFailures = true
     showViolations = true
 }
 

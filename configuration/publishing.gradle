@@ -21,27 +21,25 @@ version = project.ext.VERSION_NAME
 group = POM_GROUP
 
 def getReleaseRepositoryUrl() {
-    return hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL :
-            "https://aws.oss.sonatype.org/service/local/staging/deploy/maven2/"
+    return "https://maven.pkg.github.com/AtlasXV/android-libs"
 }
 
 def getSnapshotRepositoryUrl() {
-    return hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL :
-            "https://aws.oss.sonatype.org/content/repositories/snapshots/"
+    return "https://maven.pkg.github.com/AtlasXV/android-libs"
 }
 
 def getRepositoryUsername() {
-    return hasProperty('SONATYPE_NEXUS_USERNAME') ? SONATYPE_NEXUS_USERNAME : ""
+    return System.getenv("GPR_USR") ?: localProperties.getProperty("GPR_USR")
 }
 
 def getRepositoryPassword() {
-    return hasProperty('SONATYPE_NEXUS_PASSWORD') ? SONATYPE_NEXUS_PASSWORD : ""
+    return System.getenv("GPR_KEY") ?: localProperties.getProperty("GPR_KEY")
 }
 
 afterEvaluate { project ->
     uploadArchives {
         repositories {
-            if (project.hasProperty('SONATYPE_NEXUS_USERNAME')) {
+//            if (project.hasProperty('SONATYPE_NEXUS_USERNAME')) {
                 mavenDeployer {
                     beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
@@ -52,9 +50,9 @@ afterEvaluate { project ->
                     repository(url: getReleaseRepositoryUrl()) {
                         authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
                     }
-                    snapshotRepository(url: getSnapshotRepositoryUrl()) {
-                        authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
-                    }
+//                    snapshotRepository(url: getSnapshotRepositoryUrl()) {
+//                        authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+//                    }
 
                     pom.project {
                         name POM_NAME
@@ -87,13 +85,13 @@ afterEvaluate { project ->
                         }
                     }
                 }
-            } else {
-                mavenInstaller {
-                    pom.groupId = POM_GROUP
-                    pom.artifactId = POM_ARTIFACT_ID
-                    pom.version = project.ext.VERSION_NAME
-                }
-            }
+//            } else {
+//                mavenInstaller {
+//                    pom.groupId = POM_GROUP
+//                    pom.artifactId = POM_ARTIFACT_ID
+//                    pom.version = project.ext.VERSION_NAME
+//                }
+//            }
         }
     }
 
