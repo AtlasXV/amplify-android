@@ -308,7 +308,7 @@ public final class Orchestrator {
                 // are then used to filter data received from AppSync.
                 queryPredicateProvider.resolvePredicates();
 
-                subscriptionProcessor.startSubscriptions();
+//                subscriptionProcessor.startSubscriptions();
                 publishNetworkStatusEvent(true);
 
                 long startTime = System.currentTimeMillis();
@@ -334,9 +334,8 @@ public final class Orchestrator {
                 }
 
                 LOG.debug("Draining outbox...");
-                mutationProcessor.startDrainingMutationOutbox();
-
-                subscriptionProcessor.startDrainingMutationBuffer();
+//                mutationProcessor.startDrainingMutationOutbox();
+//                subscriptionProcessor.startDrainingMutationBuffer();
 
                 emitter.onComplete();
             })

@@ -113,7 +113,8 @@ final class SyncProcessor {
             hydrationTasks.add(createHydrationTask(schema));
         }
 
-        return Completable.concat(hydrationTasks)
+//        return Completable.concat(hydrationTasks)
+        return Completable.merge(hydrationTasks)
             .doOnSubscribe(ignore -> {
                 // This is where we trigger the syncQueriesStarted event since
                 // doOnSubscribe means that all upstream hydration tasks
@@ -166,7 +167,7 @@ final class SyncProcessor {
                 ));
             })
             .doOnComplete(() ->
-                LOG.info("Successfully sync'd down model state from cloud.")
+                LOG.info(String.format("Successfully sync'd down model %1$s state from cloud.", schema.getName()))
             );
     }
 
