@@ -118,7 +118,9 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
 
     @Override
     public void cancel() {
-        ongoingCall.cancel();
+        if (ongoingCall != null) {
+            ongoingCall.cancel();
+        }
     }
 
     static <R> Builder<R> builder() {
