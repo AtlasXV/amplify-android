@@ -1,4 +1,4 @@
-#### 1. 原始文档 https://github.com/aws-amplify/amplify-android/README.md
+#### 1. 原始文档 https://github.com/aws-amplify/amplify-android
 #### 2. 修改内容
 - 修复一系列amplify崩溃
 - 根据目前需求去掉本地数据库变更监听逻辑
