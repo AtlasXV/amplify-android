@@ -89,13 +89,17 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
      */
     @SuppressWarnings("unused") // This is a public API.
     public AWSS3StoragePlugin() {
-        this(new AWSMobileClientAuthProvider());
+        this(new AWSMobileClientAuthProvider(), false);
+    }
+
+    public AWSS3StoragePlugin(boolean transferAcceleration) {
+        this(new AWSMobileClientAuthProvider(), transferAcceleration);
     }
 
     @VisibleForTesting
-    AWSS3StoragePlugin(CognitoAuthProvider cognitoAuthProvider) {
+    AWSS3StoragePlugin(CognitoAuthProvider cognitoAuthProvider, boolean transferAcceleration) {
         this((context, region, bucket) ->
-                new AWSS3StorageService(context, region, bucket, cognitoAuthProvider, false),
+                        new AWSS3StorageService(context, region, bucket, cognitoAuthProvider, transferAcceleration),
                 cognitoAuthProvider);
     }
 
