@@ -14,8 +14,8 @@
  */
 
 apply plugin: 'com.android.library'
-//apply from: rootProject.file("configuration/publishing.gradle")
-apply from: new File("${rootProject.rootDir}/configuration/publishing.gradle")
+//apply from: rootProject.file("configuration/checkstyle.gradle")
+apply from: rootProject.file("configuration/publishing.gradle")
 
 dependencies {
     implementation project(':core')

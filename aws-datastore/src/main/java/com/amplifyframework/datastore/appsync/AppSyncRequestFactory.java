@@ -102,6 +102,7 @@ final class AppSyncRequestFactory {
                                     modelSchema.getModelClass()));
             if (lastSync != null) {
                 builder.variable("lastSync", "AWSTimestamp", lastSync);
+                builder.header("lastSync", lastSync);
             }
             if (limit != null) {
                 builder.variable("limit", "Int", limit);

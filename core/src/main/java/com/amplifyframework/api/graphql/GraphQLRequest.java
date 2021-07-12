@@ -57,6 +57,8 @@ public abstract class GraphQLRequest<R> {
      */
     public abstract Map<String, Object> getVariables();
 
+    public abstract Map<String, Object> getHeaders();
+
     /**
      * Processes query parameters into a query string to
      * be used as HTTP request body.

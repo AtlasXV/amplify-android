@@ -27,6 +27,7 @@ import java.util.Map;
  */
 public final class SimpleGraphQLRequest<R> extends GraphQLRequest<R> {
     private final String document;
+    private final Map<String, Object> headers;
     private final Map<String, Object> variables;
 
     /**
@@ -40,7 +41,7 @@ public final class SimpleGraphQLRequest<R> extends GraphQLRequest<R> {
             Type responseType,
             VariablesSerializer variablesSerializer
     ) {
-        this(document, Collections.emptyMap(), responseType, variablesSerializer);
+        this(document, Collections.emptyMap(), responseType, Collections.emptyMap(), variablesSerializer);
     }
 
     /**
@@ -54,9 +55,11 @@ public final class SimpleGraphQLRequest<R> extends GraphQLRequest<R> {
             String document,
             Map<String, Object> variables,
             Type responseType,
+            Map<String, Object> headers,
             VariablesSerializer variablesSerializer
     ) {
         super(responseType, variablesSerializer);
+        this.headers = headers;
         this.variables = variables;
         this.document = document;
     }
@@ -69,6 +72,11 @@ public final class SimpleGraphQLRequest<R> extends GraphQLRequest<R> {
     @Override
     public Map<String, Object> getVariables() {
         return this.variables;
+    }
+
+    @Override
+    public Map<String, Object> getHeaders() {
+        return this.headers;
     }
 
     @Override
@@ -87,11 +95,12 @@ public final class SimpleGraphQLRequest<R> extends GraphQLRequest<R> {
 
         SimpleGraphQLRequest<?> that = (SimpleGraphQLRequest<?>) object;
         return ObjectsCompat.equals(document, that.document) &&
-                ObjectsCompat.equals(variables, that.variables);
+                ObjectsCompat.equals(variables, that.variables) &&
+                ObjectsCompat.equals(headers, that.headers);
     }
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(super.hashCode(), document, variables);
+        return ObjectsCompat.hash(super.hashCode(), document, variables, headers);
     }
 }

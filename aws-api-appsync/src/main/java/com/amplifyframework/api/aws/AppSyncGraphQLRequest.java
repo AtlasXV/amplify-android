@@ -45,6 +45,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     private final ModelSchema modelSchema;
     private final Operation operation;
     private final SelectionSet selectionSet;
+    private final Map<String, Object> headers;
     private final Map<String, Object> variables;
     private final Map<String, String> variableTypes;
     private final AuthorizationType authorizationType;
@@ -57,6 +58,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         this.modelSchema = builder.modelSchema;
         this.operation = builder.operation;
         this.selectionSet = builder.selectionSet;
+        this.headers = Immutable.of(builder.headers);
         this.variables = Immutable.of(builder.variables);
         this.variableTypes = Immutable.of(builder.variableTypes);
         this.authorizationType = builder.authorizationType;
@@ -76,6 +78,11 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      */
     public Operation getOperation() {
         return operation;
+    }
+
+    @Override
+    public Map<String, Object> getHeaders() {
+        return Immutable.of(headers);
     }
 
     @Override
@@ -168,12 +175,13 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
                 ObjectsCompat.equals(operation, that.operation) &&
                 ObjectsCompat.equals(selectionSet, that.selectionSet) &&
                 ObjectsCompat.equals(variables, that.variables) &&
-                ObjectsCompat.equals(variableTypes, that.variableTypes);
+                ObjectsCompat.equals(variableTypes, that.variableTypes) &&
+                ObjectsCompat.equals(headers, that.headers);
     }
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(super.hashCode(), modelSchema, operation, selectionSet, variables, variableTypes);
+        return ObjectsCompat.hash(super.hashCode(), modelSchema, operation, selectionSet, variables, variableTypes, headers);
     }
 
     @Override
@@ -184,6 +192,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
                 ", selectionSet=" + selectionSet +
                 ", variables=" + variables +
                 ", variableTypes=" + variableTypes +
+                ", headers=" + headers +
                 ", responseType=" + getResponseType() +
                 ", variablesSerializer=" + getVariablesSerializer() +
                 '}';
@@ -218,10 +227,12 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         private AuthorizationType authorizationType;
         private final Map<String, Object> variables;
         private final Map<String, String> variableTypes;
+        private final Map<String, Object> headers;
 
         Builder() {
             this.variables = new HashMap<>();
             this.variableTypes = new HashMap<>();
+            this.headers = new HashMap<>();
         }
 
         <R> Builder(AppSyncGraphQLRequest<R> request) {
@@ -229,6 +240,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             this.operation = request.operation;
             this.responseType = request.getResponseType();
             this.selectionSet = new SelectionSet(request.selectionSet);
+            this.headers = new HashMap<>(request.headers);
             this.variables = new HashMap<>(request.variables);
             this.variableTypes = new HashMap<>(request.variableTypes);
             this.authorizationType = request.authorizationType;
@@ -306,6 +318,12 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             Objects.requireNonNull(type);
             this.variables.put(key, value);
             this.variableTypes.put(key, type);
+            return this;
+        }
+
+        public Builder header(@NonNull String key, Object value) {
+            Objects.requireNonNull(key);
+            this.headers.put(key, value);
             return this;
         }
 

@@ -30,10 +30,14 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.logging.Logger;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Headers;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -93,11 +97,27 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
 
         try {
             LOG.debug("Request: " + getRequest().getContent());
+            Headers.Builder headers = new Headers.Builder()
+                    .add("accept", CONTENT_TYPE)
+                    .add("content-type", CONTENT_TYPE);
+            // 增加缓存控制机制
+            Map<String, Object> headerSettings = getRequest().getHeaders();
+            if (headerSettings.get("lastSync") instanceof Long) {
+                @SuppressWarnings("ConstantConditions")
+                long lastSyncTime = (Long) headerSettings.get("lastSync");
+                Date lastSyncDate;
+                if (lastSyncTime > 9999999999L) {
+                    lastSyncDate = Date.from(Instant.ofEpochMilli(lastSyncTime));
+                } else {
+                    lastSyncDate = Date.from(Instant.ofEpochSecond(lastSyncTime));
+                }
+                headers.set("If-Modified-Since", lastSyncDate);
+            }
+
             RequestDecorator requestDecorator = apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
             Request okHttpRequest = new Request.Builder()
                 .url(endpoint)
-                .addHeader("accept", CONTENT_TYPE)
-                .addHeader("content-type", CONTENT_TYPE)
+                .headers(headers.build())
                 .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
                 .build();
             ongoingCall = client.newCall(requestDecorator.decorate(okHttpRequest));

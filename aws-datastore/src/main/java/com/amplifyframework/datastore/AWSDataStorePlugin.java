@@ -43,7 +43,7 @@ import com.amplifyframework.datastore.storage.ItemChangeMapper;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
-import com.amplifyframework.datastore.syncengine.Orchestrator;
+import com.amplifyframework.datastore.syncengine.AtlasvOrchestrator;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
 
@@ -70,7 +70,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     // A component which synchronizes data state between the
     // local storage adapter, and a remote API
-    private final Orchestrator orchestrator;
+    private final AtlasvOrchestrator atlasvOrchestrator;
 
     // Keeps track of whether of not the category is initialized yet
     private final CountDownLatch categoryInitializationsPending;
@@ -90,13 +90,13 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
         // Used to interrogate plugins, to understand if sync should be automatically turned on
-        this.orchestrator = new Orchestrator(
-            modelProvider,
-            modelSchemaRegistry,
-            sqliteStorageAdapter,
-            AppSyncClient.via(api),
-            () -> pluginConfiguration,
-            () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API
+        this.atlasvOrchestrator = new AtlasvOrchestrator(
+                modelProvider,
+                modelSchemaRegistry,
+                sqliteStorageAdapter,
+                AppSyncClient.via(api),
+                () -> pluginConfiguration,
+                () -> api.getPlugins().isEmpty() ? AtlasvOrchestrator.State.LOCAL_ONLY : AtlasvOrchestrator.State.SYNC_VIA_API
         );
         this.userProvidedConfiguration = userProvidedConfiguration;
     }
@@ -115,13 +115,13 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         this.categoryInitializationsPending = new CountDownLatch(1);
 
         // Used to interrogate plugins, to understand if sync should be automatically turned on
-        this.orchestrator = new Orchestrator(
-            modelProvider,
-            modelSchemaRegistry,
-            sqliteStorageAdapter,
-            AppSyncClient.via(api),
-            () -> pluginConfiguration,
-            () -> api.getPlugins().isEmpty() ? Orchestrator.State.LOCAL_ONLY : Orchestrator.State.SYNC_VIA_API
+        this.atlasvOrchestrator = new AtlasvOrchestrator(
+                modelProvider,
+                modelSchemaRegistry,
+                sqliteStorageAdapter,
+                AppSyncClient.via(api),
+                () -> pluginConfiguration,
+                () -> api.getPlugins().isEmpty() ? AtlasvOrchestrator.State.LOCAL_ONLY : AtlasvOrchestrator.State.SYNC_VIA_API
         );
     }
 
@@ -278,7 +278,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public void start(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
         waitForInitialization()
-            .andThen(orchestrator.start())
+            .andThen(atlasvOrchestrator.start())
             .subscribeOn(Schedulers.io())
             .subscribe(
                 onComplete::call,
@@ -292,7 +292,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public void stop(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
         waitForInitialization()
-            .andThen(orchestrator.stop())
+            .andThen(atlasvOrchestrator.stop())
             .subscribeOn(Schedulers.io())
             .subscribe(
                 onComplete::call,
