@@ -87,7 +87,8 @@ final class AppSyncRequestFactory {
             @NonNull final ModelSchema modelSchema,
             @Nullable final Long lastSync,
             @Nullable final Integer limit,
-            @NonNull final QueryPredicate predicate)
+            @NonNull final QueryPredicate predicate,
+            @Nullable final Integer syncModels)
             throws DataStoreException {
         try {
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
@@ -107,6 +108,7 @@ final class AppSyncRequestFactory {
             if (limit != null) {
                 builder.variable("limit", "Int", limit);
             }
+            builder.header("syncModels", syncModels);
             if (!QueryPredicates.all().equals(predicate)) {
                 String filterType = "Model" + Casing.capitalizeFirst(modelSchema.getName()) + "FilterInput";
                 QueryPredicate syncPredicate = predicate;

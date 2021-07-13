@@ -110,7 +110,7 @@ final class AtlasvSyncProcessor {
             TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
         Collections.sort(modelSchemas, ordering::compare);
         for (ModelSchema schema : modelSchemas) {
-            hydrationTasks.add(createHydrationTask(schema));
+            hydrationTasks.add(createHydrationTask(schema, modelSchemas.size()));
         }
 
 //        return Completable.concat(hydrationTasks)
@@ -132,14 +132,14 @@ final class AtlasvSyncProcessor {
             });
     }
 
-    private Completable createHydrationTask(ModelSchema schema) {
+    private Completable createHydrationTask(ModelSchema schema, int taskSize) {
         ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(schema.getName());
         return syncTimeRegistry.lookupLastSyncTime(schema.getName())
             .map(this::filterOutOldSyncTimes)
             // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
             .flatMap(lastSyncTime -> {
                 // Sync all the pages
-                return syncModel(schema, lastSyncTime)
+                return syncModel(schema, lastSyncTime, taskSize)
                     // Switch to a new thread so that subsequent API fetches will happen in parallel with DB writes.
                     .observeOn(Schedulers.io())
                     // Flatten to a stream of ModelWithMetadata objects
@@ -210,7 +210,7 @@ final class AtlasvSyncProcessor {
      * @return a stream of all ModelWithMetadata&lt;T&gt; objects from all pages for the provided model.
      * @throws DataStoreException if dataStoreConfigurationProvider.getConfiguration() fails
      */
-    private <T extends Model> Flowable<List<ModelWithMetadata<T>>> syncModel(ModelSchema schema, SyncTime syncTime)
+    private <T extends Model> Flowable<List<ModelWithMetadata<T>>> syncModel(ModelSchema schema, SyncTime syncTime, int syncModels)
             throws DataStoreException {
         final Long lastSyncTimeAsLong = syncTime.exists() ? syncTime.toLong() : null;
         final Integer syncPageSize = dataStoreConfigurationProvider.getConfiguration().getSyncPageSize();
@@ -220,7 +220,7 @@ final class AtlasvSyncProcessor {
         // Create a BehaviorProcessor, and set the default value to a GraphQLRequest that fetches the first page.
         BehaviorProcessor<GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>>> processor =
                 BehaviorProcessor.createDefault(
-                        appSync.buildSyncRequest(schema, lastSyncTimeAsLong, syncPageSize, predicate));
+                        appSync.buildSyncRequest(schema, lastSyncTimeAsLong, syncPageSize, predicate, syncModels));
 
         return processor.concatMap(request -> syncPage(request).toFlowable())
                 .doOnNext(paginatedResult -> {

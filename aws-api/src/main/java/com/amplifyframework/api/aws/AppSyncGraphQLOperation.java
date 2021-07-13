@@ -57,8 +57,8 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
 
     private final String endpoint;
     private final OkHttpClient client;
-    private final Consumer<GraphQLResponse<R>> onResponse;
-    private final Consumer<ApiException> onFailure;
+    public final Consumer<GraphQLResponse<R>> onResponse;
+    public final Consumer<ApiException> onFailure;
     private final ApiRequestDecoratorFactory apiRequestDecoratorFactory;
 
     private Call ongoingCall;
@@ -147,6 +147,14 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
         return new Builder<>();
     }
 
+    public void postResponse(String jsonResponse) {
+        try {
+            onResponse.accept(wrapResponse(jsonResponse));
+        } catch (ApiException exception) {
+            onFailure.accept(exception);
+        }
+    }
+
     @SuppressLint("SyntheticAccessor")
     class OkHttpCallback implements Callback {
         @Override
@@ -165,12 +173,7 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
                 }
             }
 
-            try {
-                onResponse.accept(wrapResponse(jsonResponse));
-                //TODO: Dispatch to hub
-            } catch (ApiException exception) {
-                onFailure.accept(exception);
-            }
+            postResponse(jsonResponse);
         }
 
         @Override

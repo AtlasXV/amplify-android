@@ -76,7 +76,18 @@ public final class AppSyncClient implements AppSync {
             @Nullable Long lastSync,
             @Nullable Integer syncPageSize,
             @NonNull QueryPredicate queryPredicate) throws DataStoreException {
-        return AppSyncRequestFactory.buildSyncRequest(modelSchema, lastSync, syncPageSize, queryPredicate);
+        return AppSyncRequestFactory.buildSyncRequest(modelSchema, lastSync, syncPageSize, queryPredicate, 1);
+    }
+
+    @NonNull
+    @Override
+    public <T extends Model> GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> buildSyncRequest(
+            @NonNull ModelSchema modelSchema,
+            @Nullable Long lastSync,
+            @Nullable Integer syncPageSize,
+            @NonNull QueryPredicate queryPredicate,
+            @Nullable Integer syncModels) throws DataStoreException {
+        return AppSyncRequestFactory.buildSyncRequest(modelSchema, lastSync, syncPageSize, queryPredicate, syncModels);
     }
 
     @NonNull

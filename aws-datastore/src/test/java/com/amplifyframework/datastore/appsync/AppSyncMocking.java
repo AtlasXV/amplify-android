@@ -467,7 +467,7 @@ public final class AppSyncMocking {
                 Long lastSync = invocation.getArgument(1);
                 Integer syncPageSize = invocation.getArgument(2);
                 QueryPredicate queryPredicate = invocation.getArgument(3);
-                return AppSyncRequestFactory.buildSyncRequest(schema, lastSync, syncPageSize, queryPredicate);
+                return AppSyncRequestFactory.buildSyncRequest(schema, lastSync, syncPageSize, queryPredicate, 1);
             }).when(appSync).buildSyncRequest(any(), any(), any(), any());
             return this;
         }
@@ -534,7 +534,7 @@ public final class AppSyncMocking {
             if (nextToken != null) {
                 ModelSchema schema = ModelSchema.fromModelClass(modelClass);
                 requestForNextResult =
-                    AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all())
+                    AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all(), 1)
                         .newBuilder()
                         .variable("nextToken", "String", nextToken)
                         .build();

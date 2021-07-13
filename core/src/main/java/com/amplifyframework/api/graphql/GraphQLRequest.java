@@ -51,6 +51,10 @@ public abstract class GraphQLRequest<R> {
      */
     public abstract String getQuery();
 
+    public abstract String getQueryHeader();
+
+    public abstract String getOperationContent();
+
     /**
      * Returns Map of variables to be serialized and set as "variables" in the request.
      * @return Map of variables to be serialized and set as "variables" in the request.
@@ -88,7 +92,7 @@ public abstract class GraphQLRequest<R> {
      * Returns the VariablesSerializer for serializing variables on the GraphQLRequest.
      * @return the VariablesSerializer for serializing variables on the GraphQLRequest.
      */
-    protected VariablesSerializer getVariablesSerializer() {
+    public VariablesSerializer getVariablesSerializer() {
         return variablesSerializer;
     }
 

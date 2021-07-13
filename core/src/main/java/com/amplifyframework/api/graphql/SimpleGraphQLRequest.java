@@ -70,6 +70,16 @@ public final class SimpleGraphQLRequest<R> extends GraphQLRequest<R> {
     }
 
     @Override
+    public String getQueryHeader() {
+        return "";
+    }
+
+    @Override
+    public String getOperationContent() {
+        return this.document;
+    }
+
+    @Override
     public Map<String, Object> getVariables() {
         return this.variables;
     }

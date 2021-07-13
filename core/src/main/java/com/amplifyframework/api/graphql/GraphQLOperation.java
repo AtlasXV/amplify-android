@@ -41,6 +41,10 @@ public abstract class GraphQLOperation<R> extends ApiOperation<GraphQLRequest<R>
         this.responseFactory = responseFactory;
     }
 
+    public String getOperationContent() {
+        return getRequest().getOperationContent();
+    }
+
     /**
      * Converts a response json string containing a single object to a formatted
      * {@link GraphQLResponse} object that a response consumer can receive.

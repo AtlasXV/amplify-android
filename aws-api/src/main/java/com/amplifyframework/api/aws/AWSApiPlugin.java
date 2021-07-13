@@ -16,15 +16,19 @@
 package com.amplifyframework.api.aws;
 
 import android.content.Context;
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
+import com.amplifyframework.api.aws.auth.RequestDecorator;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointStatus;
@@ -40,29 +44,46 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.UserAgent;
+import com.amplifyframework.util.Wrap;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.Connection;
 import okhttp3.EventListener;
+import okhttp3.Headers;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * Plugin implementation to be registered with Amplify API category.
@@ -70,6 +91,7 @@ import okhttp3.Protocol;
  */
 @SuppressWarnings("TypeParameterHidesVisibleType") // <R> shadows >com.amplifyframework.api.aws.R
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private final Map<String, ClientDetails> apiDetails;
     private final Map<String, OkHttpConfigurator> apiConfigurators;
     private final GraphQLResponse.Factory gqlResponseFactory;
@@ -79,6 +101,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     private final Set<String> restApis;
     private final Set<String> gqlApis;
+
+    private static final String CONTENT_TYPE = "application/json";
+    private final Timer outOfBufferTimer = new Timer();
+    private final Set<GraphQLOperation<?>> bufferedQueries = new HashSet<>();
 
     /**
      * Default constructor for this plugin without any overrides.
@@ -218,12 +244,183 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         try {
             final GraphQLOperation<R> operation =
                     buildAppSyncGraphQLOperation(apiName, graphQLRequest, onResponse, onFailure);
-            operation.start();
+            Integer defaultSize = 1;
+            Integer syncModels = (Integer) graphQLRequest.getHeaders().getOrDefault("syncModels", defaultSize);
+            if (defaultSize.equals(syncModels)) {
+                operation.start();
+            } else {
+                synchronized (bufferedQueries) {
+                    if (bufferedQueries.isEmpty()) {
+                        //设置超时触发机制，防止bufferedQueries无法被触发的情形
+                        outOfBufferTimer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                if (!bufferedQueries.isEmpty()) {
+                                    LOG.info("call drainBufferedQueries for timeout");
+                                    drainBufferedQueries(apiName, graphQLRequest);
+                                }
+                            }
+                        }, 2000);
+                    }
+                    bufferedQueries.add(operation);
+                    if (bufferedQueries.size() >= syncModels) {
+                        outOfBufferTimer.cancel();
+                        LOG.info("call drainBufferedQueries for exceeds syncModels");
+                        drainBufferedQueries(apiName, graphQLRequest);
+                    }
+                }
+            }
             return operation;
         } catch (ApiException exception) {
             onFailure.accept(exception);
             return null;
         }
+    }
+
+    private void drainBufferedQueries(String apiName, GraphQLRequest<?> graphQLRequest) {
+        List<String> headers = new ArrayList<>();
+        ArrayList<String> contents = new ArrayList<>();
+        Map<String, Object> variables = new HashMap<>();
+        long lastSync = Long.MAX_VALUE;
+        for (GraphQLOperation<?> operation : bufferedQueries) {
+            headers.add(operation.getRequest().getQueryHeader());
+            variables.putAll(operation.getRequest().getVariables());
+            contents.add(operation.getOperationContent() + "\n");
+
+            //选取最小的sync时间作为同步时间
+            Long syncTime = (Long) operation.getRequest().getHeaders().getOrDefault("lastSync", Long.MAX_VALUE);
+            if (lastSync > syncTime) {
+                lastSync = syncTime;
+            }
+        }
+
+        //选取最长的 query header, 有的 model 包含过滤参数会更长。如 VFX
+        String queryHeader = headers.get(0);
+        for (String header : headers) {
+            if (header.length() > queryHeader.length()) {
+                queryHeader = header;
+            }
+        }
+
+        try {
+            requestMergeRequest(apiName, queryHeader, contents, variables, lastSync, graphQLRequest);
+        } catch (ApiException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void requestMergeRequest(
+            String apiName,
+            String queryHeader,
+            ArrayList<String> contents,
+            Map<String, Object> variablesMap,
+            long lastSync,
+            GraphQLRequest<?> lastReq) throws ApiException, IOException {
+
+        String body = TextUtils.join(" ", contents);
+        String variables = variablesMap.isEmpty() ? null : lastReq.getVariablesSerializer().serialize(variablesMap);
+        String rawQuery = queryHeader + Wrap.inPrettyBraces(body, "", "  ") + "\n";
+        rawQuery = rawQuery.replace("\"", "\\\"").replace("\n", "\\n");
+        String queryText = Wrap.inBraces(TextUtils.join(", ", Arrays.asList(
+                Wrap.inDoubleQuotes("query") + ": " + Wrap.inDoubleQuotes(rawQuery),
+                Wrap.inDoubleQuotes("variables") + ": " + variables)));
+
+        Headers.Builder headers = new Headers.Builder()
+                .add("accept", CONTENT_TYPE)
+                .add("content-type", CONTENT_TYPE);
+        // 增加缓存控制机制
+        if (lastSync > 0 && lastSync != Long.MAX_VALUE) {
+            Date lastSyncDate;
+            if (lastSync > 9999999999L) {
+                lastSyncDate = Date.from(Instant.ofEpochMilli(lastSync));
+            } else {
+                lastSyncDate = Date.from(Instant.ofEpochSecond(lastSync));
+            }
+            headers.set("If-Modified-Since", lastSyncDate);
+        }
+        final ClientDetails clientDetails = apiDetails.get(apiName);
+        if (clientDetails == null) {
+            throw new ApiException(
+                    "No client information for API named " + apiName,
+                    "Check your amplify configuration to make sure there " +
+                            "is a correctly configured section for " + apiName
+            );
+        }
+
+        RequestDecorator requestDecorator = clientDetails.getApiRequestDecoratorFactory().fromGraphQLRequest(lastReq);
+        Request okHttpRequest = new Request.Builder()
+                .url(clientDetails.getApiConfiguration().getEndpoint())
+                .headers(headers.build())
+                .post(RequestBody.create(queryText, MediaType.parse(CONTENT_TYPE)))
+                .build();
+
+        Call call = clientDetails.getOkHttpClient().newCall(requestDecorator.decorate(okHttpRequest));
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException exception) {
+                notifyFailure(new ApiException(
+                        "OkHttp client request failed.", exception, "See attached exception for more details."));
+                bufferedQueries.clear();
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) {
+                LOG.info("onResponse got response from remote ");
+                final ResponseBody responseBody = response.body();
+                String jsonResponse = null;
+                if (responseBody != null) {
+                    try {
+                        jsonResponse = responseBody.string();
+                    } catch (IOException exception) {
+                        notifyFailure(new ApiException(
+                                "Could not retrieve the compound response body from the returned JSON",
+                                exception, AmplifyException.TODO_RECOVERY_SUGGESTION
+                        ));
+                        return;
+                    }
+                }
+
+                try {
+                    try {
+                        JSONObject json = new JSONObject(jsonResponse);
+                        JSONObject data = json.getJSONObject("data");
+
+
+                        for (GraphQLOperation<?> operation : bufferedQueries) {
+                            if (operation instanceof AppSyncGraphQLOperation) {
+                                //获取sync* key
+                                String responseKey = operation.getRequest().getOperationContent().split("\\(")[0];
+                                JSONObject reqData = new JSONObject();
+                                JSONObject reqBody = new JSONObject();
+                                reqBody.put(responseKey, data.getJSONObject(responseKey));
+                                reqData.put("data", reqBody);
+                                executorService.submit(() -> {
+                                    ((AppSyncGraphQLOperation<?>) operation).postResponse(reqData.toString());
+                                });
+                                LOG.info("submit response responseKey: " + responseKey);
+                            }
+                        }
+                    } catch (Exception e) {
+                        throw new ApiException(
+                                "Could not retrieve the response body from the returned JSON",
+                                e, AmplifyException.TODO_RECOVERY_SUGGESTION
+                        );
+                    }
+
+                } catch (ApiException exception) {
+                    notifyFailure(exception);
+                }
+                bufferedQueries.clear();
+            }
+
+            private void notifyFailure(ApiException exception) {
+                for (GraphQLOperation<?> operation : bufferedQueries) {
+                    if (operation instanceof AppSyncGraphQLOperation) {
+                        ((AppSyncGraphQLOperation<?>) operation).onFailure.accept(exception);
+                    }
+                }
+            }
+        });
     }
 
     @Nullable

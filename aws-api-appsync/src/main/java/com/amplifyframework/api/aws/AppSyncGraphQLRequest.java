@@ -159,6 +159,80 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     }
 
     @Override
+    public String getQueryHeader() {
+        String inputTypeString = "";
+        if (variableTypes.size() > 0) {
+            List<String> inputKeys = new ArrayList<>(variableTypes.keySet());
+            Collections.sort(inputKeys);
+
+            List<String> inputTypes = new ArrayList<>();
+            List<String> inputParameters = new ArrayList<>();
+            for (String key : inputKeys) {
+                inputTypes.add("$" + key + ": " + variableTypes.get(key));
+                inputParameters.add(key + ": $" + key);
+            }
+
+            inputTypeString = Wrap.inParentheses(TextUtils.join(", ", inputTypes));
+        }
+
+        String modelName = Casing.capitalizeFirst(modelSchema.getName());
+        if (QueryType.LIST.equals(operation)) {
+            // The list operation name is pluralized by simply adding 's' to the end.
+            modelName += "s";
+        } else if (QueryType.SYNC.equals(operation)) {
+            // The sync operation name is pluralized using pluralize.js, which uses more complex pluralization rules
+            // than simply adding an 's' at the end (e.g. baby > babies, person > people, etc).  This pluralized name
+            // is an annotation on the codegen'd model class, so we will just grab it from the ModelSchema.
+            modelName = Casing.capitalizeFirst(modelSchema.getPluralName());
+        }
+
+        return operation.getOperationType().getName() +
+                " " +
+                Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE).to(Casing.CaseType.PASCAL_CASE)
+                        .convert(operation.toString()) +
+                "AllModel" + inputTypeString;
+    }
+
+    @Override
+    public String getOperationContent() {
+        String inputTypeString = "";
+        String inputParameterString = "";
+        if (variableTypes.size() > 0) {
+            List<String> inputKeys = new ArrayList<>(variableTypes.keySet());
+            Collections.sort(inputKeys);
+
+            List<String> inputTypes = new ArrayList<>();
+            List<String> inputParameters = new ArrayList<>();
+            for (String key : inputKeys) {
+                inputTypes.add("$" + key + ": " + variableTypes.get(key));
+                inputParameters.add(key + ": $" + key);
+            }
+
+            inputTypeString = Wrap.inParentheses(TextUtils.join(", ", inputTypes));
+            inputParameterString = Wrap.inParentheses(TextUtils.join(", ", inputParameters));
+        }
+
+        String modelName = Casing.capitalizeFirst(modelSchema.getName());
+        if (QueryType.LIST.equals(operation)) {
+            // The list operation name is pluralized by simply adding 's' to the end.
+            modelName += "s";
+        } else if (QueryType.SYNC.equals(operation)) {
+            // The sync operation name is pluralized using pluralize.js, which uses more complex pluralization rules
+            // than simply adding an 's' at the end (e.g. baby > babies, person > people, etc).  This pluralized name
+            // is an annotation on the codegen'd model class, so we will just grab it from the ModelSchema.
+            modelName = Casing.capitalizeFirst(modelSchema.getPluralName());
+        }
+
+
+        return  Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE)
+                        .to(Casing.CaseType.CAMEL_CASE)
+                        .convert(operation.toString()) +
+                        modelName +
+                        inputParameterString +
+                        selectionSet.toString("  ");
+    }
+
+    @Override
     public boolean equals(Object object) {
         if (this == object) {
             return true;

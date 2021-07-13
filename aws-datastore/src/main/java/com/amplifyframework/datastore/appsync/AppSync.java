@@ -67,6 +67,27 @@ public interface AppSync {
     ) throws DataStoreException;
 
     /**
+     * Builds a sync query {@link GraphQLRequest} that can be passed to the
+     * {@link AppSync#sync(GraphQLRequest, Consumer, Consumer)} method.
+     * @param <T> The type of data in the response. Must extend Model.
+     * @param modelSchema The schema of the Model we are listening on
+     * @param lastSync The time you last synced - all changes since this time are retrieved.
+     * @param syncPageSize limit for number of records to return per page.
+     * @param queryPredicate QueryPredicate to filter the records returned.
+     * @param syncModels sync models number
+     * @return A {@link GraphQLRequest} for making a sync query
+     * @throws DataStoreException on error building GraphQLRequest due to inability to obtain model schema.
+     */
+    @NonNull
+    <T extends Model> GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> buildSyncRequest(
+            @NonNull ModelSchema modelSchema,
+            @Nullable Long lastSync,
+            @Nullable Integer syncPageSize,
+            @NonNull QueryPredicate queryPredicate,
+            @Nullable Integer syncModels
+    ) throws DataStoreException;
+
+    /**
      * Uses Amplify API category to get a list of changes which have happened since a last sync time.
      * @param <T> The type of data in the response. Must extend Model.
      * @param request The {@link GraphQLRequest} for requesting a sync query.

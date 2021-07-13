@@ -73,7 +73,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         JSONAssert.assertEquals(
             Resources.readAsString("base-sync-request-document-for-blog-owner.txt"),
-            AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all()).getContent(),
+            AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all(), 1).getContent(),
             true
         );
     }
@@ -89,7 +89,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(Parent.class);
         JSONAssert.assertEquals(
             Resources.readAsString("base-sync-request-document-for-parent.txt"),
-            AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all()).getContent(),
+            AppSyncRequestFactory.buildSyncRequest(schema, null, null, QueryPredicates.all(), 1).getContent(),
             true
         );
     }
@@ -104,7 +104,7 @@ public final class AppSyncRequestFactoryTest {
     public void validateRequestGenerationForDeltaSync() throws AmplifyException, JSONException {
         ModelSchema schema = ModelSchema.fromModelClass(Post.class);
         JSONAssert.assertEquals(Resources.readAsString("delta-sync-request-document-for-post.txt"),
-            AppSyncRequestFactory.buildSyncRequest(schema, 123123123L, null, QueryPredicates.all()).getContent(),
+            AppSyncRequestFactory.buildSyncRequest(schema, 123123123L, null, QueryPredicates.all(), 1).getContent(),
             true);
     }
 
@@ -119,7 +119,7 @@ public final class AppSyncRequestFactoryTest {
         Integer limit = 1000;
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         final GraphQLRequest<Iterable<Post>> request =
-                AppSyncRequestFactory.buildSyncRequest(schema, null, limit, QueryPredicates.all());
+                AppSyncRequestFactory.buildSyncRequest(schema, null, limit, QueryPredicates.all(), 1);
         JSONAssert.assertEquals(Resources.readAsString("base-sync-request-paginating-blog-owners.txt"),
                 request.getContent(),
                 true);
@@ -136,7 +136,7 @@ public final class AppSyncRequestFactoryTest {
         String id = "426f8e8d-ea0f-4839-a73f-6a2a38565ba1";
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         final GraphQLRequest<Iterable<Post>> request =
-                AppSyncRequestFactory.buildSyncRequest(schema, null, null, BlogOwner.ID.eq(id));
+                AppSyncRequestFactory.buildSyncRequest(schema, null, null, BlogOwner.ID.eq(id), 1);
         JSONAssert.assertEquals(Resources.readAsString("base-sync-request-with-predicate-operation.txt"),
                 request.getContent(),
                 true);
@@ -153,7 +153,7 @@ public final class AppSyncRequestFactoryTest {
         ModelSchema schema = ModelSchema.fromModelClass(BlogOwner.class);
         QueryPredicate predicate = BlogOwner.ID.eq(id).and(Blog.NAME.eq("Spaghetti"));
         final GraphQLRequest<Iterable<Post>> request =
-                AppSyncRequestFactory.buildSyncRequest(schema, null, null, predicate);
+                AppSyncRequestFactory.buildSyncRequest(schema, null, null, predicate, 1);
         JSONAssert.assertEquals(Resources.readAsString("base-sync-request-with-predicate-group.txt"),
                 request.getContent(),
                 true);
