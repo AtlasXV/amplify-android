@@ -355,6 +355,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .build();
 
         Call call = clientDetails.getOkHttpClient().newCall(requestDecorator.decorate(okHttpRequest));
+        LOG.info("start post all models http request");
         call.enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException exception) {
