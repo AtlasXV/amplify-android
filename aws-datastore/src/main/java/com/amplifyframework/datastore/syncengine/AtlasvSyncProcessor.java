@@ -109,8 +109,21 @@ final class AtlasvSyncProcessor {
         TopologicalOrdering ordering =
             TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
         Collections.sort(modelSchemas, ordering::compare);
+        Boolean isMergeAllRequest = false;
+        try {
+            if (dataStoreConfigurationProvider.getConfiguration().getMergeAllRequest() != null) {
+                isMergeAllRequest = dataStoreConfigurationProvider.getConfiguration().getMergeAllRequest();
+            }
+        } catch (DataStoreException e) {
+            e.printStackTrace();
+        }
+
         for (ModelSchema schema : modelSchemas) {
-            hydrationTasks.add(createHydrationTask(schema, modelSchemas.size()));
+            try {
+                hydrationTasks.add(createHydrationTask(schema, isMergeAllRequest ? modelSchemas.size() : 1));
+            } catch (DataStoreException e) {
+                e.printStackTrace();
+            }
         }
 
 //        return Completable.concat(hydrationTasks)
@@ -132,21 +145,24 @@ final class AtlasvSyncProcessor {
             });
     }
 
-    private Completable createHydrationTask(ModelSchema schema, int taskSize) {
+    private Completable createHydrationTask(ModelSchema schema, int taskSize) throws DataStoreException {
+        SyncTime lastDbPublishTime;
+        try {
+            lastDbPublishTime = SyncTime.from(dataStoreConfigurationProvider.getConfiguration().getLastDbPublishTime());
+        } catch (DataStoreException e) {
+            e.printStackTrace();
+            lastDbPublishTime =SyncTime.never();
+        }
+
         ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(schema.getName());
-        return syncTimeRegistry.lookupLastSyncTime(schema.getName())
-            .map(this::filterOutOldSyncTimes)
-            // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
-            .flatMap(lastSyncTime -> {
-                // Sync all the pages
-                return syncModel(schema, lastSyncTime, taskSize)
-                    // Switch to a new thread so that subsequent API fetches will happen in parallel with DB writes.
-                    .observeOn(Schedulers.io())
-                    // Flatten to a stream of ModelWithMetadata objects
-                    .concatMap(Flowable::fromIterable)
-                    .concatMapCompletable(item -> merger.merge(item, metricsAccumulator::increment))
-                    .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
-            })
+        final SyncTime lastSyncTime = lastDbPublishTime;
+        return syncModel(schema, lastSyncTime, taskSize)
+            // Switch to a new thread so that subsequent API fetches will happen in parallel with DB writes.
+            .observeOn(Schedulers.io())
+            // Flatten to a stream of ModelWithMetadata objects
+            .concatMap(Flowable::fromIterable)
+            .concatMapCompletable(item -> merger.merge(item, metricsAccumulator::increment))
+            .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE)
             .flatMapCompletable(syncType -> {
                 Completable syncTimeSaveCompletable = SyncType.DELTA.equals(syncType) ?
                     syncTimeRegistry.saveLastDeltaSyncTime(schema.getName(), SyncTime.now()) :
@@ -220,7 +236,7 @@ final class AtlasvSyncProcessor {
         // Create a BehaviorProcessor, and set the default value to a GraphQLRequest that fetches the first page.
         BehaviorProcessor<GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>>> processor =
                 BehaviorProcessor.createDefault(
-                        appSync.buildSyncRequest(schema, lastSyncTimeAsLong, syncPageSize, predicate, syncModels));
+                        appSync.buildListRequest(schema, lastSyncTimeAsLong, syncPageSize, predicate, syncModels));
 
         return processor.concatMap(request -> syncPage(request).toFlowable())
                 .doOnNext(paginatedResult -> {

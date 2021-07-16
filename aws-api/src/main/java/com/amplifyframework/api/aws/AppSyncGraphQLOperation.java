@@ -28,6 +28,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.Casing;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -97,22 +98,11 @@ public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
 
         try {
             LOG.debug("Request: " + getRequest().getContent());
+            String responseKey = getRequest().getOperationContent().split("\\(")[0];
             Headers.Builder headers = new Headers.Builder()
                     .add("accept", CONTENT_TYPE)
-                    .add("content-type", CONTENT_TYPE);
-            // 增加缓存控制机制
-            Map<String, Object> headerSettings = getRequest().getHeaders();
-            if (headerSettings.get("lastSync") instanceof Long) {
-                @SuppressWarnings("ConstantConditions")
-                long lastSyncTime = (Long) headerSettings.get("lastSync");
-                Date lastSyncDate;
-                if (lastSyncTime > 9999999999L) {
-                    lastSyncDate = Date.from(Instant.ofEpochMilli(lastSyncTime));
-                } else {
-                    lastSyncDate = Date.from(Instant.ofEpochSecond(lastSyncTime));
-                }
-                headers.set("If-Modified-Since", lastSyncDate);
-            }
+                    .add("content-type", CONTENT_TYPE)
+                    .add("x-query-name", Casing.capitalizeFirst(responseKey));
 
             RequestDecorator requestDecorator = apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
             Request okHttpRequest = new Request.Builder()

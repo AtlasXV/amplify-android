@@ -50,6 +50,8 @@ public final class DataStoreConfiguration {
     private final Integer syncPageSize;
     private final Map<String, DataStoreSyncExpression> syncExpressions;
     private final Long syncIntervalInMinutes;
+    private final Long lastDbPublishTime;
+    private final Boolean mergeAllRequest;
 
     private DataStoreConfiguration(Builder builder) {
         this.errorHandler = builder.errorHandler;
@@ -58,6 +60,8 @@ public final class DataStoreConfiguration {
         this.syncPageSize = builder.syncPageSize;
         this.syncIntervalInMinutes = builder.syncIntervalInMinutes;
         this.syncExpressions = builder.syncExpressions;
+        this.lastDbPublishTime = builder.lastDbPublishTime;
+        this.mergeAllRequest = builder.mergeAllRequest;
     }
 
     /**
@@ -174,6 +178,14 @@ public final class DataStoreConfiguration {
         return this.syncPageSize;
     }
 
+    public Long getLastDbPublishTime() {
+        return this.lastDbPublishTime;
+    }
+
+    public Boolean getMergeAllRequest() {
+        return this.mergeAllRequest;
+    }
+
     /**
      * Returns the Map of all {@link DataStoreSyncExpression}s used to filter data received from AppSync, either during
      * a sync or over the real-time subscription.
@@ -247,6 +259,8 @@ public final class DataStoreConfiguration {
         private Long syncIntervalInMinutes;
         private Integer syncMaxRecords;
         private Integer syncPageSize;
+        private Long lastDbPublishTime;
+        private Boolean mergeAllRequest;
         private Map<String, DataStoreSyncExpression> syncExpressions;
         private boolean ensureDefaults;
         private JSONObject pluginJson;
@@ -310,6 +324,16 @@ public final class DataStoreConfiguration {
         @NonNull
         public Builder syncMaxRecords(@IntRange(from = 0) Integer syncMaxRecords) {
             this.syncMaxRecords = syncMaxRecords;
+            return Builder.this;
+        }
+
+        public Builder lastDbPublishTime(Long lastDbPublishTime) {
+            this.lastDbPublishTime = lastDbPublishTime;
+            return Builder.this;
+        }
+
+        public Builder mergeAllRequest(Boolean mergeAllRequest) {
+            this.mergeAllRequest = mergeAllRequest;
             return Builder.this;
         }
 
@@ -410,6 +434,8 @@ public final class DataStoreConfiguration {
             syncMaxRecords = getValueOrDefault(userProvidedConfiguration.getSyncMaxRecords(), syncMaxRecords);
             syncPageSize = getValueOrDefault(userProvidedConfiguration.getSyncPageSize(), syncPageSize);
             syncExpressions = userProvidedConfiguration.getSyncExpressions();
+            lastDbPublishTime = userProvidedConfiguration.lastDbPublishTime;
+            mergeAllRequest = userProvidedConfiguration.mergeAllRequest;
         }
 
         private static <T> T getValueOrDefault(T value, T defaultValue) {

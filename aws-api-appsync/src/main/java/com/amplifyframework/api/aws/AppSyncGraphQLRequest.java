@@ -90,6 +90,10 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         return Immutable.of(variables);
     }
 
+    public Map<String, String> getVariableTypes() {
+        return Immutable.of(variableTypes);
+    }
+
     /**
      * Returns the {@link AuthorizationType} for this request.
      * @return the {@link AuthorizationType} for this request.
@@ -205,7 +209,11 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             List<String> inputParameters = new ArrayList<>();
             for (String key : inputKeys) {
                 inputTypes.add("$" + key + ": " + variableTypes.get(key));
-                inputParameters.add(key + ": $" + key);
+                String paramName = key;
+                if (key.startsWith("filter")) {
+                    paramName = "filter";
+                }
+                inputParameters.add(paramName + ": $" + key);
             }
 
             inputTypeString = Wrap.inParentheses(TextUtils.join(", ", inputTypes));

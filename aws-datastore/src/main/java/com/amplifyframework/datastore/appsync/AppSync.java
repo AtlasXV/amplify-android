@@ -79,7 +79,7 @@ public interface AppSync {
      * @throws DataStoreException on error building GraphQLRequest due to inability to obtain model schema.
      */
     @NonNull
-    <T extends Model> GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> buildSyncRequest(
+    <T extends Model> GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> buildListRequest(
             @NonNull ModelSchema modelSchema,
             @Nullable Long lastSync,
             @Nullable Integer syncPageSize,

@@ -35,6 +35,7 @@ import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent.ApiEndpointS
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.Operation;
 import com.amplifyframework.api.rest.HttpMethod;
 import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOperationRequest;
@@ -45,6 +46,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.UserAgent;
 import com.amplifyframework.util.Wrap;
@@ -281,26 +283,51 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         List<String> headers = new ArrayList<>();
         ArrayList<String> contents = new ArrayList<>();
         Map<String, Object> variables = new HashMap<>();
-        long lastSync = Long.MAX_VALUE;
+        Map<String, String> variableTypes = new HashMap<>();
+
+        Operation requestOperation = null;
+        Long lastSync = null;
         for (GraphQLOperation<?> operation : bufferedQueries) {
+            if (requestOperation == null) {
+                if (operation.getRequest() instanceof AppSyncGraphQLRequest<?>) {
+                    requestOperation = ((AppSyncGraphQLRequest<?>) operation.getRequest()).getOperation();
+                }
+            }
             headers.add(operation.getRequest().getQueryHeader());
             variables.putAll(operation.getRequest().getVariables());
+            if (operation.getRequest() instanceof AppSyncGraphQLRequest<?>) {
+                variableTypes.putAll(((AppSyncGraphQLRequest<?>) operation.getRequest()).getVariableTypes());
+            }
             contents.add(operation.getOperationContent() + "\n");
 
             //选取最小的sync时间作为同步时间
-            Long syncTime = (Long) operation.getRequest().getHeaders().getOrDefault("lastSync", Long.MAX_VALUE);
-            if (lastSync > syncTime) {
-                lastSync = syncTime;
+            if (lastSync == null) {
+                lastSync = (Long) operation.getRequest().getHeaders().getOrDefault("lastSync", Long.MAX_VALUE);
             }
         }
 
-        //选取最长的 query header, 有的 model 包含过滤参数会更长。如 VFX
-        String queryHeader = headers.get(0);
-        for (String header : headers) {
-            if (header.length() > queryHeader.length()) {
-                queryHeader = header;
-            }
+        if (requestOperation == null) {
+            throw new IllegalStateException("requestOperation is null");
         }
+
+        //组合最 query header, 需要取出所有的query parameter,组成一个查询的头部
+        String queryHeader = headers.get(0);
+        String inputTypeString = "";
+        if (variableTypes.size() > 0) {
+            List<String> inputKeys = new ArrayList<>(variableTypes.keySet());
+            Collections.sort(inputKeys);
+
+            List<String> inputTypes = new ArrayList<>();
+            for (String key : inputKeys) {
+                inputTypes.add("$" + key + ": " + variableTypes.get(key));
+            }
+
+            inputTypeString = Wrap.inParentheses(TextUtils.join(", ", inputTypes));
+        }
+        queryHeader = requestOperation.getOperationType().getName() + " "
+                + Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE).to(Casing.CaseType.PASCAL_CASE)
+                .convert(requestOperation.toString()) +
+                "AllModel" + inputTypeString;
 
         try {
             requestMergeRequest(apiName, queryHeader, contents, variables, lastSync, graphQLRequest);
@@ -327,17 +354,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         Headers.Builder headers = new Headers.Builder()
                 .add("accept", CONTENT_TYPE)
-                .add("content-type", CONTENT_TYPE);
-        // 增加缓存控制机制
-        if (lastSync > 0 && lastSync != Long.MAX_VALUE) {
-            Date lastSyncDate;
-            if (lastSync > 9999999999L) {
-                lastSyncDate = Date.from(Instant.ofEpochMilli(lastSync));
-            } else {
-                lastSyncDate = Date.from(Instant.ofEpochSecond(lastSync));
-            }
-            headers.set("If-Modified-Since", lastSyncDate);
-        }
+                .add("content-type", CONTENT_TYPE)
+                .add("x-query-name", "ListAllModel");
+
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
             throw new ApiException(

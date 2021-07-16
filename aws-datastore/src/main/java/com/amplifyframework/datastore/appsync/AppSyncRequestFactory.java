@@ -40,11 +40,13 @@ import com.amplifyframework.core.model.query.predicate.LessOrEqualQueryOperator;
 import com.amplifyframework.core.model.query.predicate.LessThanQueryOperator;
 import com.amplifyframework.core.model.query.predicate.NotContainsQueryOperator;
 import com.amplifyframework.core.model.query.predicate.NotEqualQueryOperator;
+import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.TypeMaker;
@@ -53,6 +55,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -121,6 +124,58 @@ final class AppSyncRequestFactory {
                     syncPredicate = QueryPredicateGroup.andOf(syncPredicate);
                 }
                 builder.variable("filter", filterType, parsePredicate(syncPredicate));
+            }
+            return builder.build();
+        } catch (AmplifyException amplifyException) {
+            throw new DataStoreException("Failed to get fields for model.",
+                    amplifyException, "Validate your model file.");
+        }
+    }
+
+    @NonNull
+    static <T> AppSyncGraphQLRequest<T> buildListRequest(
+            @NonNull final ModelSchema modelSchema,
+            @Nullable final Long lastSync,
+            @Nullable final Integer limit,
+            @NonNull final QueryPredicate predicate,
+            @Nullable final Integer syncModels)
+            throws DataStoreException {
+        try {
+            AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
+                    .modelClass(modelSchema.getModelClass())
+                    .modelSchema(modelSchema)
+                    .operation(QueryType.LIST)
+                    .requestOptions(new DataStoreGraphQLRequestOptions())
+                    .responseType(
+                            TypeMaker.getParameterizedType(
+                                    PaginatedResult.class,
+                                    ModelWithMetadata.class,
+                                    modelSchema.getModelClass()));
+            QueryPredicate listPredicate = predicate;
+            if (lastSync != null) {
+                Temporal.DateTime dbSyncTime = new Temporal.DateTime(new Date(lastSync),0);
+//                builder.variable("updatedAt", "AWSDateTime", dbSyncTime);
+                listPredicate = predicate.and(QueryField.field("updatedAt").gt(dbSyncTime));
+                builder.header("lastSync", lastSync);
+            }
+            if (limit != null) {
+                builder.variable("limit", "Int", limit);
+            }
+            builder.header("syncModels", syncModels);
+
+            if (!QueryPredicates.all().equals(listPredicate)) {
+                String modelName = Casing.capitalizeFirst(modelSchema.getName());
+                String filterType = "Model" + modelName + "FilterInput";
+                QueryPredicate syncPredicate = listPredicate;
+                if (syncPredicate instanceof QueryPredicateOperation) {
+                    // When a filter is provided, wrap it with a predicate group of type AND.  By doing this, it enables
+                    // AppSync to optimize the request by performing a DynamoDB query instead of a scan.  If the
+                    // provided syncPredicate is already a QueryPredicateGroup, this is not needed.  If the provided
+                    // group is of type AND, the optimization will occur.  If the top level group is OR or NOT, the
+                    // optimization is not possible anyway.
+                    syncPredicate = QueryPredicateGroup.andOf(syncPredicate);
+                }
+                builder.variable("filter" + modelName, filterType, parsePredicate(syncPredicate));
             }
             return builder.build();
         } catch (AmplifyException amplifyException) {
