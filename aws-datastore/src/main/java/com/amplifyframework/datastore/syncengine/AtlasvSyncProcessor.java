@@ -154,15 +154,21 @@ final class AtlasvSyncProcessor {
             lastDbPublishTime =SyncTime.never();
         }
 
+        final SyncTime dbBaseTime = lastDbPublishTime;
         ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(schema.getName());
-        final SyncTime lastSyncTime = lastDbPublishTime;
-        return syncModel(schema, lastSyncTime, taskSize)
-            // Switch to a new thread so that subsequent API fetches will happen in parallel with DB writes.
-            .observeOn(Schedulers.io())
-            // Flatten to a stream of ModelWithMetadata objects
-            .concatMap(Flowable::fromIterable)
-            .concatMapCompletable(item -> merger.merge(item, metricsAccumulator::increment))
-            .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE)
+        return syncTimeRegistry.lookupLastSyncTime(schema.getName())
+            .map(this::filterOutOldSyncTimes)
+            // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
+            .flatMap(lastSyncTime -> {
+                // Sync all the pages
+                return syncModel(schema, lastSyncTime.exists() ? dbBaseTime : lastSyncTime, taskSize)
+                    // Switch to a new thread so that subsequent API fetches will happen in parallel with DB writes.
+                    .observeOn(Schedulers.io())
+                    // Flatten to a stream of ModelWithMetadata objects
+                    .concatMap(Flowable::fromIterable)
+                    .concatMapCompletable(item -> merger.merge(item, metricsAccumulator::increment))
+                    .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
+            })
             .flatMapCompletable(syncType -> {
                 Completable syncTimeSaveCompletable = SyncType.DELTA.equals(syncType) ?
                     syncTimeRegistry.saveLastDeltaSyncTime(schema.getName(), SyncTime.now()) :

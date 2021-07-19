@@ -44,6 +44,7 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Casing;
@@ -302,7 +303,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
             //选取最小的sync时间作为同步时间
             if (lastSync == null) {
-                lastSync = (Long) operation.getRequest().getHeaders().getOrDefault("lastSync", Long.MAX_VALUE);
+                lastSync = (Long) operation.getRequest().getHeaders().getOrDefault("lastSync", 0L);
             }
         }
 
@@ -355,6 +356,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         Headers.Builder headers = new Headers.Builder()
                 .add("accept", CONTENT_TYPE)
                 .add("content-type", CONTENT_TYPE)
+                .add("x-lp-time", new Temporal.DateTime(new Date(lastSync), 0).format())
                 .add("x-query-name", "ListAllModel");
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
