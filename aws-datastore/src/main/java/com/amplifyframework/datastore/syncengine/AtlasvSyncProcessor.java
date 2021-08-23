@@ -240,9 +240,14 @@ final class AtlasvSyncProcessor {
         AtomicReference<Integer> recordsFetched = new AtomicReference<>(0);
         QueryPredicate predicate = queryPredicateProvider.getPredicate(schema.getName());
         // Create a BehaviorProcessor, and set the default value to a GraphQLRequest that fetches the first page.
-        BehaviorProcessor<GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>>> processor =
-                BehaviorProcessor.createDefault(
-                        appSync.buildListRequest(schema, lastSyncTimeAsLong, syncPageSize, predicate, syncModels));
+        BehaviorProcessor<GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>>> processor;
+        if (syncModels > 1) {
+            processor = BehaviorProcessor.createDefault(
+                    appSync.buildListRequest(schema, lastSyncTimeAsLong, syncPageSize, predicate, syncModels));
+        } else {
+            processor = BehaviorProcessor.createDefault(
+                    appSync.buildSyncRequest(schema, lastSyncTimeAsLong, syncPageSize, predicate));
+        }
 
         return processor.concatMap(request -> syncPage(request).toFlowable())
                 .doOnNext(paginatedResult -> {
