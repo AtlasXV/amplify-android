@@ -288,22 +288,26 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         Operation requestOperation = null;
         Long lastSync = null;
-        for (GraphQLOperation<?> operation : bufferedQueries) {
-            if (requestOperation == null) {
-                if (operation.getRequest() instanceof AppSyncGraphQLRequest<?>) {
-                    requestOperation = ((AppSyncGraphQLRequest<?>) operation.getRequest()).getOperation();
+        Set<GraphQLOperation<?>> currQueries = new HashSet<GraphQLOperation<?>>();
+        synchronized (bufferedQueries) {
+            for (GraphQLOperation<?> operation : bufferedQueries) {
+                if (requestOperation == null) {
+                    if (operation.getRequest() instanceof AppSyncGraphQLRequest<?>) {
+                        requestOperation = ((AppSyncGraphQLRequest<?>) operation.getRequest()).getOperation();
+                    }
                 }
-            }
-            headers.add(operation.getRequest().getQueryHeader());
-            variables.putAll(operation.getRequest().getVariables());
-            if (operation.getRequest() instanceof AppSyncGraphQLRequest<?>) {
-                variableTypes.putAll(((AppSyncGraphQLRequest<?>) operation.getRequest()).getVariableTypes());
-            }
-            contents.add(operation.getOperationContent() + "\n");
+                headers.add(operation.getRequest().getQueryHeader());
+                variables.putAll(operation.getRequest().getVariables());
+                if (operation.getRequest() instanceof AppSyncGraphQLRequest<?>) {
+                    variableTypes.putAll(((AppSyncGraphQLRequest<?>) operation.getRequest()).getVariableTypes());
+                }
+                contents.add(operation.getOperationContent() + "\n");
 
-            //选取最小的sync时间作为同步时间
-            if (lastSync == null) {
-                lastSync = (Long) operation.getRequest().getHeaders().getOrDefault("lastSync", 0L);
+                //选取最小的sync时间作为同步时间
+                if (lastSync == null) {
+                    lastSync = (Long) operation.getRequest().getHeaders().getOrDefault("lastSync", 0L);
+                }
+                currQueries.add(operation);
             }
         }
 
@@ -331,7 +335,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 "AllModel" + inputTypeString;
 
         try {
-            requestMergeRequest(apiName, queryHeader, contents, variables, lastSync, graphQLRequest);
+            requestMergeRequest(apiName, queryHeader, contents, variables, lastSync, graphQLRequest, currQueries);
         } catch (ApiException | IOException e) {
             e.printStackTrace();
         }
@@ -343,7 +347,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             ArrayList<String> contents,
             Map<String, Object> variablesMap,
             long lastSync,
-            GraphQLRequest<?> lastReq) throws ApiException, IOException {
+            GraphQLRequest<?> lastReq,
+            Set<GraphQLOperation<?>> currQueries) throws ApiException, IOException {
 
         String body = TextUtils.join(" ", contents);
         String variables = variablesMap.isEmpty() ? null : lastReq.getVariablesSerializer().serialize(variablesMap);
@@ -382,7 +387,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             public void onFailure(@NotNull Call call, @NotNull IOException exception) {
                 notifyFailure(new ApiException(
                         "OkHttp client request failed.", exception, "See attached exception for more details."));
-                bufferedQueries.clear();
+                synchronized (bufferedQueries) {
+                    bufferedQueries.clear();
+                }
             }
 
             @Override
@@ -408,7 +415,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                         JSONObject data = json.getJSONObject("data");
 
 
-                        for (GraphQLOperation<?> operation : bufferedQueries) {
+                        for (GraphQLOperation<?> operation : currQueries) {
                             if (operation instanceof AppSyncGraphQLOperation) {
                                 //获取sync* key
                                 String responseKey = operation.getRequest().getOperationContent().split("\\(")[0];
@@ -432,11 +439,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 } catch (ApiException exception) {
                     notifyFailure(exception);
                 }
-                bufferedQueries.clear();
+
+                synchronized (bufferedQueries) {
+                    bufferedQueries.clear();
+                }
             }
 
             private void notifyFailure(ApiException exception) {
-                for (GraphQLOperation<?> operation : bufferedQueries) {
+                for (GraphQLOperation<?> operation : currQueries) {
                     if (operation instanceof AppSyncGraphQLOperation) {
                         ((AppSyncGraphQLOperation<?>) operation).onFailure.accept(exception);
                     }
