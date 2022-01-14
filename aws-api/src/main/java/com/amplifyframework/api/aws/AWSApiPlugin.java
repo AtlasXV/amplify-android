@@ -58,7 +58,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -106,7 +105,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final Set<String> gqlApis;
 
     private static final String CONTENT_TYPE = "application/json";
-    private final Timer outOfBufferTimer = new Timer();
+    private Timer outOfBufferTimer = null;
     private final Set<GraphQLOperation<?>> bufferedQueries = new HashSet<>();
 
     /**
@@ -118,6 +117,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     /**
      * Deprecated. Use {@link #builder()} instead.
+     *
      * @param apiAuthProvider Don't use this
      * @deprecated Use the fluent {@link #builder()}, instead.
      */
@@ -139,6 +139,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     /**
      * Begins construction of a new AWSApiPlugin instance by using a fluent builder.
+     *
      * @return A builder to help construct an AWSApiPlugin
      */
     public static Builder builder() {
@@ -176,7 +177,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             ClientDetails clientDetails = null;
             if (EndpointType.REST.equals(endpointType)) {
                 final InterceptorFactory interceptorFactory =
-                    new AppSyncSigV4SignerInterceptorFactory(authProvider);
+                        new AppSyncSigV4SignerInterceptorFactory(authProvider);
                 if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
                     okHttpClientBuilder.addInterceptor(interceptorFactory.create(apiConfiguration));
                 }
@@ -184,19 +185,19 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 restApis.add(apiName);
             } else if (EndpointType.GRAPHQL.equals(endpointType)) {
                 final SubscriptionAuthorizer subscriptionAuthorizer =
-                    new SubscriptionAuthorizer(apiConfiguration, authProvider);
+                        new SubscriptionAuthorizer(apiConfiguration, authProvider);
                 final SubscriptionEndpoint subscriptionEndpoint =
-                    new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory, subscriptionAuthorizer);
+                        new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory, subscriptionAuthorizer);
                 final ApiRequestDecoratorFactory requestDecoratorFactory =
-                    new ApiRequestDecoratorFactory(authProvider,
-                                                   apiConfiguration.getAuthorizationType(),
-                                                   apiConfiguration.getRegion(),
-                                                   apiConfiguration.getApiKey());
+                        new ApiRequestDecoratorFactory(authProvider,
+                                apiConfiguration.getAuthorizationType(),
+                                apiConfiguration.getRegion(),
+                                apiConfiguration.getApiKey());
 
                 clientDetails = new ClientDetails(apiConfiguration,
-                                                  okHttpClientBuilder.build(),
-                                                  subscriptionEndpoint,
-                                                  requestDecoratorFactory);
+                        okHttpClientBuilder.build(),
+                        subscriptionEndpoint,
+                        requestDecoratorFactory);
                 gqlApis.add(apiName);
             }
             if (clientDetails != null) {
@@ -255,6 +256,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 synchronized (bufferedQueries) {
                     if (bufferedQueries.isEmpty()) {
                         //设置超时触发机制，防止bufferedQueries无法被触发的情形
+                        if (outOfBufferTimer == null) {
+                            outOfBufferTimer = new Timer();
+                        }
                         outOfBufferTimer.schedule(new TimerTask() {
                             @Override
                             public void run() {
@@ -268,6 +272,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                     bufferedQueries.add(operation);
                     if (bufferedQueries.size() >= syncModels) {
                         outOfBufferTimer.cancel();
+                        outOfBufferTimer = null;
                         LOG.info("call drainBufferedQueries for exceeds syncModels");
                         drainBufferedQueries(apiName, graphQLRequest);
                     }
@@ -540,7 +545,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
 
             if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
-                ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
+                    ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
                 authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
             }
 
@@ -551,15 +556,15 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         SubscriptionOperation<R> operation = SubscriptionOperation.<R>builder()
-            .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
-            .graphQlRequest(authDecoratedRequest)
-            .responseFactory(gqlResponseFactory)
-            .executorService(executorService)
-            .onSubscriptionStart(onSubscriptionEstablished)
-            .onNextItem(onNextResponse)
-            .onSubscriptionError(onSubscriptionFailure)
-            .onSubscriptionComplete(onSubscriptionComplete)
-            .build();
+                .subscriptionEndpoint(clientDetails.getSubscriptionEndpoint())
+                .graphQlRequest(authDecoratedRequest)
+                .responseFactory(gqlResponseFactory)
+                .executorService(executorService)
+                .onSubscriptionStart(onSubscriptionEstablished)
+                .onNextItem(onNextResponse)
+                .onSubscriptionError(onSubscriptionFailure)
+                .onSubscriptionComplete(onSubscriptionComplete)
+                .build();
         operation.start();
         return operation;
     }
@@ -842,8 +847,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     /**
      * Creates a HTTP REST operation.
-     * @param type     Operation type
-     * @param options  Request options
+     *
+     * @param type       Operation type
+     * @param options    Request options
      * @param onResponse Called when a response is available
      * @param onFailure  Called when no response is available
      * @return A REST Operation
@@ -1020,6 +1026,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         /**
          * Specify authentication providers.
+         *
          * @param apiAuthProviders A set of authentication providers to use for API calls
          * @return Current builder instance, for fluent construction of plugin
          */
@@ -1033,8 +1040,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         /**
          * Apply customizations to an underlying OkHttpClient that will be used
          * for a particular API.
-         * @param forApiName The name of the API for which these customizations should apply.
-                             This can be found in your `amplifyconfiguration.json` file.
+         *
+         * @param forApiName     The name of the API for which these customizations should apply.
+         *                       This can be found in your `amplifyconfiguration.json` file.
          * @param byConfigurator A lambda that hands the user an OkHttpClient.Builder,
          *                       and enables the user to set come configurations on it.
          * @return A builder instance, to continue chaining configurations
@@ -1048,6 +1056,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         /**
          * Builds an {@link AWSApiPlugin}.
+         *
          * @return An AWSApiPlugin
          */
         @NonNull
