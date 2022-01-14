@@ -271,7 +271,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                     }
                     bufferedQueries.add(operation);
                     if (bufferedQueries.size() >= syncModels) {
-                        outOfBufferTimer.cancel();
+                        if (outOfBufferTimer != null) {
+                            outOfBufferTimer.cancel();
+                        }
                         outOfBufferTimer = null;
                         LOG.info("call drainBufferedQueries for exceeds syncModels");
                         drainBufferedQueries(apiName, graphQLRequest);
