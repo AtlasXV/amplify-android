@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
+import com.amazonaws.AmazonClientException;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
@@ -343,8 +344,27 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         try {
             requestMergeRequest(apiName, queryHeader, contents, variables, lastSync, graphQLRequest, currQueries);
-        } catch (ApiException | IOException e) {
-            e.printStackTrace();
+        } catch (ApiException e) {
+            for (GraphQLOperation<?> operation : currQueries) {
+                if (operation instanceof AppSyncGraphQLOperation) {
+                    ((AppSyncGraphQLOperation<?>) operation).onFailure.accept(e);
+                }
+            }
+            synchronized (bufferedQueries) {
+                bufferedQueries.clear();
+            }
+        } catch (IOException | AmazonClientException e) {
+            ApiException wrapException = new ApiException(
+                    "fail to merge requests",
+                    e, AmplifyException.TODO_RECOVERY_SUGGESTION);
+            for (GraphQLOperation<?> operation : currQueries) {
+                if (operation instanceof AppSyncGraphQLOperation) {
+                    ((AppSyncGraphQLOperation<?>) operation).onFailure.accept(wrapException);
+                }
+            }
+            synchronized (bufferedQueries) {
+                bufferedQueries.clear();
+            }
         }
     }
 
