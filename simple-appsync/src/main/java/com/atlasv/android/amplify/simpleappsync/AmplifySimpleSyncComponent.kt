@@ -14,6 +14,7 @@ import com.atlasv.android.amplify.simpleappsync.ext.*
 import com.atlasv.android.amplify.simpleappsync.response.AmplifyModelMerger
 import com.atlasv.android.amplify.simpleappsync.storage.AmplifySqliteStorage
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * weiping@atlasv.com
@@ -47,10 +48,19 @@ class AmplifySimpleSyncComponent(
     }
 
     suspend fun syncFromRemote(
-        grayRelease: Int, dbInitTime: Long, locale: String
+        grayRelease: Int, dbInitTime: Long, locale: String, dataExpireInterval: Long = TimeUnit.DAYS.toMillis(30)
     ) {
         try {
-            val lastSync = getLastSyncTime(dbInitTime)
+            var lastSync = getLastSyncTime(dbInitTime)
+            val currentTime = System.currentTimeMillis()
+            val dataAge = currentTime - lastSync
+            var oldDataExpired = false
+            if (lastSync > 0 && dataAge > dataExpireInterval) {
+                LOG.info("dataAge=${dataAge}ms, exceed $dataExpireInterval, need full sync")
+                lastSync = 0
+                oldDataExpired = true
+            }
+
             val lastLocale = AmplifyExtSettings.getLastModelLocale(appContext)
             val rebuildLocale = lastLocale != locale
             LOG.info("Start sync, lastLocale=$lastLocale, target locale=$locale, lastSync=${Date(lastSync).simpleFormat()}")
@@ -67,7 +77,7 @@ class AmplifySimpleSyncComponent(
             val responseItemGroups = Amplify.API.query(request).data.map {
                 it.data.items.toList()
             }
-            val newestSyncTime = responseItemGroups.maxOfOrNull { list ->
+            val newestSyncTime = if (oldDataExpired) currentTime else responseItemGroups.maxOfOrNull { list ->
                 list.maxOfOrNull {
                     it.syncMetadata.lastChangedAt?.secondsSinceEpoch ?: 0L
                 } ?: 0L
