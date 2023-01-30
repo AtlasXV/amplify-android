@@ -85,7 +85,7 @@ internal class AWSPollyService(
         } else {
             // Override configuration defaults if explicitly specified in the options
             languageCode = voiceType.languageCode
-            voiceId = voiceType.name
+            voiceId = voiceType.getName()
         }
 
         val synthesizeSpeechRequest = SynthesizeSpeechRequest {
