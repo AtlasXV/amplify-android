@@ -47,6 +47,14 @@ allprojects {
         maven(url = "https://aws.oss.sonatype.org/content/repositories/snapshots/")
         google()
         mavenCentral()
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/AtlasXV/android-libs")
+            credentials {
+                username = project.findProperty("GPR_USR").toString()
+                password = project.findProperty("GPR_KEY").toString()
+            }
+        }
     }
 
     gradle.projectsEvaluated {
