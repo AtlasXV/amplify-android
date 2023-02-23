@@ -256,7 +256,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         private Type responseType;
         private SelectionSet selectionSet;
         private AuthorizationType authorizationType;
-        private final Map<String, Object> variables;
+        final HashMap<String, Object> variables;
         private final Map<String, String> variableTypes;
 
         Builder() {
