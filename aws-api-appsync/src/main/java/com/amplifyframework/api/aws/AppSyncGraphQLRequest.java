@@ -47,7 +47,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     private final ModelSchema modelSchema;
     private final Operation operation;
     private final SelectionSet selectionSet;
-    private final Map<String, Object> variables;
+    private final HashMap<String, Object> variables;
     private final Map<String, String> variableTypes;
     private final AuthorizationType authorizationType;
     private final AuthModeStrategyType authModeStrategyType;
@@ -62,7 +62,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         this.modelSchema = builder.modelSchema;
         this.operation = builder.operation;
         this.selectionSet = builder.selectionSet;
-        this.variables = Immutable.of(builder.variables);
+        this.variables = builder.variables;
         this.variableTypes = Immutable.of(builder.variableTypes);
         this.authorizationType = builder.authorizationType;
         this.authModeStrategyType = builder.authModeStrategyType;
