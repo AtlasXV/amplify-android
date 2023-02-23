@@ -2,6 +2,7 @@ package com.amplifyframework.api.graphql.model
 
 import com.amplifyframework.api.aws.AppSyncGraphQLRequestFactory
 import com.amplifyframework.api.aws.GraphQLRequestOptions
+import com.amplifyframework.api.aws.ext.AppSyncGraphQLRequestFactoryExt
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.core.model.Model
@@ -26,4 +27,11 @@ object ModelQueryExt {
             ), options
         )
     }
+
+    operator fun <M : Model> get(
+        modelType: Class<M>, modelId: String, requestOptions: GraphQLRequestOptions
+    ): GraphQLRequest<M> {
+        return AppSyncGraphQLRequestFactoryExt.buildQuery(modelType, modelId, requestOptions)
+    }
+
 }
