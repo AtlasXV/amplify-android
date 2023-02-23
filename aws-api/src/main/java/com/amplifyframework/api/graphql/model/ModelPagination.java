@@ -26,7 +26,7 @@ public final class ModelPagination {
     /**
      * Default page size.
      */
-    private static final int DEFAULT_LIMIT = 1000;
+    public static final int DEFAULT_LIMIT = 1000;
 
     private int limit;
 
