@@ -30,20 +30,17 @@ android {
 }
 
 dependencies {
+    api(project(":annotations"))
     implementation(dependency.androidx.v4support)
     implementation(dependency.androidx.annotation)
     implementation(dependency.androidx.nav.fragment)
     implementation(dependency.androidx.nav.ui)
     implementation(dependency.kotlin.serializationJson)
 
-    implementation(dependency.aws.credentials)
-
     testImplementation(project(":aws-api-appsync"))
     // Used to reference Temporal types in tests.
     testImplementation(project(":testmodels"))
-    testImplementation(project(":testutils")) {
-        isTransitive = false
-    }
+    testImplementation(project(":testutils"))
     testImplementation(testDependency.junit)
     testImplementation(testDependency.mockito)
     testImplementation(testDependency.robolectric)
@@ -53,10 +50,8 @@ dependencies {
     testImplementation(dependency.gson)
 
     api("com.atlasv.android:timber:5.0.2")
+    androidTestImplementation(project(":testutils"))
 
-    androidTestImplementation(project(":testutils")) {
-        isTransitive = false
-    }
     androidTestImplementation(dependency.androidx.annotation)
     androidTestImplementation(testDependency.androidx.test.core)
     androidTestImplementation(testDependency.androidx.test.runner)

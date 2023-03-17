@@ -15,6 +15,7 @@
 
 import com.android.build.gradle.LibraryExtension
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
     repositories {
@@ -80,6 +81,10 @@ tasks.register<Delete>("clean").configure {
     delete(rootProject.buildDir)
 }
 
+val optInAnnotations = listOf(
+    "com.amplifyframework.annotations.InternalApiWarning"
+)
+
 subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
 
@@ -114,6 +119,14 @@ subprojects {
             maxRetries.set(9)
             maxFailures.set(100)
             failOnPassedAfterRetry.set(true)
+        }
+    }
+
+    tasks.withType<KotlinCompile> {
+        kotlinOptions {
+            optInAnnotations.forEach {
+                freeCompilerArgs += "-opt-in=$it"
+            }
         }
     }
 }
