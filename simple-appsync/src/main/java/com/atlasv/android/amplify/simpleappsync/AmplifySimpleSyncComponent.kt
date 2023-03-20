@@ -11,6 +11,8 @@ import com.amplifyframework.datastore.appsync.ModelMetadata
 import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.kotlin.core.Amplify
 import com.atlasv.android.amplify.simpleappsync.ext.*
+import com.atlasv.android.amplify.simpleappsync.request.DefaultMergeRequestFactory
+import com.atlasv.android.amplify.simpleappsync.request.MergeRequestFactory
 import com.atlasv.android.amplify.simpleappsync.response.AmplifyModelMerger
 import com.atlasv.android.amplify.simpleappsync.storage.AmplifySqliteStorage
 import java.util.*
