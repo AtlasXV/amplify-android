@@ -16,15 +16,14 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata
  * 2022/12/7
  */
 interface MergeRequestFactory {
-    fun create(
+    suspend fun create(
         appContext: Context,
         dataStoreConfiguration: DataStoreConfiguration,
         modelProvider: ModelProvider,
         schemaRegistry: SchemaRegistry,
         lastSync: Long,
         grayRelease: Int,
-        locale: String,
-        rebuildLocale: Boolean
+        locale: String
     ): GraphQLRequest<List<GraphQLResponse<PaginatedResult<ModelWithMetadata<Model>>>>>
 }
 

@@ -11,34 +11,27 @@ import com.amplifyframework.api.graphql.model.ModelPagination
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelProvider
 import com.amplifyframework.core.model.SchemaRegistry
-import com.amplifyframework.core.model.query.predicate.QueryPredicate
-import com.amplifyframework.core.model.query.predicate.QueryPredicates
-import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.appsync.DataStoreGraphQLRequestOptions
 import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.util.TypeMaker
 import com.amplifyframework.util.Wrap
-import com.atlasv.android.amplify.simpleappsync.ext.then
-import com.atlasv.android.amplify.simpleappsync.ext.queryField
-import java.util.*
 
 class DefaultMergeRequestFactory(private val predicateFactory: ModelQueryPredicateFactory) : MergeRequestFactory {
-    override fun create(
+    override suspend fun create(
         appContext: Context,
         dataStoreConfiguration: DataStoreConfiguration,
         modelProvider: ModelProvider,
         schemaRegistry: SchemaRegistry,
         lastSync: Long,
         grayRelease: Int,
-        locale: String,
-        rebuildLocale: Boolean
+        locale: String
     ): GraphQLRequest<List<GraphQLResponse<PaginatedResult<ModelWithMetadata<Model>>>>> {
         val requests = modelProvider.models().map {
             getModelRequest(
                 it,
                 dataStoreConfiguration,
-                if (rebuildLocale && it.simpleName.endsWith("Locale")) 0 else lastSync,
+                lastSync,
                 grayRelease,
                 locale
             ) as AppSyncGraphQLRequest<Any>
@@ -79,7 +72,7 @@ class DefaultMergeRequestFactory(private val predicateFactory: ModelQueryPredica
         }
     }
 
-    private fun <T : Model> getModelRequest(
+    private suspend fun <T : Model> getModelRequest(
         modelClass: Class<T>,
         dataStoreConfiguration: DataStoreConfiguration,
         lastSync: Long,

@@ -11,7 +11,6 @@ import com.amplifyframework.datastore.appsync.ModelMetadata
 import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.kotlin.core.Amplify
 import com.atlasv.android.amplify.simpleappsync.ext.*
-import com.atlasv.android.amplify.simpleappsync.request.DefaultMergeRequestFactory
 import com.atlasv.android.amplify.simpleappsync.request.MergeRequestFactory
 import com.atlasv.android.amplify.simpleappsync.response.AmplifyModelMerger
 import com.atlasv.android.amplify.simpleappsync.storage.AmplifySqliteStorage
@@ -63,9 +62,6 @@ class AmplifySimpleSyncComponent(
                 oldDataExpired = true
             }
 
-            val lastLocale = AmplifyExtSettings.getLastModelLocale(appContext)
-            val rebuildLocale = lastLocale != locale
-            LOG.info("Start sync, lastLocale=$lastLocale, target locale=$locale, lastSync=${Date(lastSync).simpleFormat()}")
             val request = mergeListFactory.create(
                 appContext,
                 dataStoreConfiguration,
@@ -73,8 +69,7 @@ class AmplifySimpleSyncComponent(
                 schemaRegistry,
                 lastSync,
                 grayRelease,
-                locale,
-                rebuildLocale
+                locale
             )
             val responseItemGroups = Amplify.API.query(request).data.map {
                 it.data.items.toList()
