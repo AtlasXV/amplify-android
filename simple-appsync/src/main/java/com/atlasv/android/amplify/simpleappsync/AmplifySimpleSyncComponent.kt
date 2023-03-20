@@ -14,6 +14,8 @@ import com.atlasv.android.amplify.simpleappsync.ext.*
 import com.atlasv.android.amplify.simpleappsync.request.MergeRequestFactory
 import com.atlasv.android.amplify.simpleappsync.response.AmplifyModelMerger
 import com.atlasv.android.amplify.simpleappsync.storage.AmplifySqliteStorage
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -29,7 +31,7 @@ class AmplifySimpleSyncComponent(
     private val mergeListFactory: MergeRequestFactory,
     private val modelPreSaveAction: (Model) -> Unit = {}
 ) {
-
+    private val mutex = Mutex()
     val storage by lazy {
         AmplifySqliteStorage(appContext, dataStoreConfiguration, object : ModelProvider {
             override fun models(): MutableSet<Class<out Model>> {
@@ -51,54 +53,56 @@ class AmplifySimpleSyncComponent(
     suspend fun syncFromRemote(
         grayRelease: Int, dbInitTime: Long, locale: String, dataExpireInterval: Long = TimeUnit.DAYS.toMillis(30)
     ) {
-        try {
-            var lastSync = getLastSyncTime(dbInitTime)
-            val currentTime = System.currentTimeMillis()
-            val dataAge = currentTime - lastSync
-            var oldDataExpired = false
-            if (lastSync > 0 && dataAge > dataExpireInterval) {
-                LOG.info("dataAge=${dataAge}ms, exceed $dataExpireInterval, need full sync")
-                lastSync = 0
-                oldDataExpired = true
-            }
-
-            val request = mergeListFactory.create(
-                appContext,
-                dataStoreConfiguration,
-                modelProvider,
-                schemaRegistry,
-                lastSync,
-                grayRelease,
-                locale
-            )
-            val responseItemGroups = Amplify.API.query(request).data.map {
-                it.data.items.toList()
-            }
-            val newestSyncTime = if (oldDataExpired) currentTime else responseItemGroups.maxOfOrNull { list ->
-                list.maxOfOrNull {
-                    it.syncMetadata.lastChangedAt?.secondsSinceEpoch ?: 0L
-                } ?: 0L
-            }?.takeIf { it > lastSync }?.also {
-                LOG.info("newestSyncTime=$it")
-            }
-            for (group in responseItemGroups) {
-                if (group.firstOrNull()?.model?.isLocaleMode == true) {
-                    continue
+        mutex.withLock {
+            try {
+                var lastSync = getLastSyncTime(dbInitTime)
+                val currentTime = System.currentTimeMillis()
+                val dataAge = currentTime - lastSync
+                var oldDataExpired = false
+                if (lastSync > 0 && dataAge > dataExpireInterval) {
+                    LOG.info("dataAge=${dataAge}ms, exceed $dataExpireInterval, need full sync")
+                    lastSync = 0
+                    oldDataExpired = true
                 }
-                merger.mergeAll(group)
-            }
 
-            for (group in responseItemGroups) {
-                applyLocaleModels(group).also {
-                    merger.mergeAll(it)
+                val request = mergeListFactory.create(
+                    appContext,
+                    dataStoreConfiguration,
+                    modelProvider,
+                    schemaRegistry,
+                    lastSync,
+                    grayRelease,
+                    locale
+                )
+                val responseItemGroups = Amplify.API.query(request).data.map {
+                    it.data.items.toList()
                 }
+                val newestSyncTime = if (oldDataExpired) currentTime else responseItemGroups.maxOfOrNull { list ->
+                    list.maxOfOrNull {
+                        it.syncMetadata.lastChangedAt?.secondsSinceEpoch ?: 0L
+                    } ?: 0L
+                }?.takeIf { it > lastSync }?.also {
+                    LOG.info("newestSyncTime=$it")
+                }
+                for (group in responseItemGroups) {
+                    if (group.firstOrNull()?.model?.isLocaleMode == true) {
+                        continue
+                    }
+                    merger.mergeAll(group)
+                }
+
+                for (group in responseItemGroups) {
+                    applyLocaleModels(group).also {
+                        merger.mergeAll(it)
+                    }
+                }
+                AmplifyExtSettings.saveLastSync(appContext, modelProvider.version(), newestSyncTime, locale)
+                LOG.info(
+                    "syncFromRemote success, locale=$locale, date=${Date(newestSyncTime ?: lastSync).simpleFormat()}"
+                )
+            } catch (cause: Throwable) {
+                LOG.error("syncFromRemote error", cause)
             }
-            AmplifyExtSettings.saveLastSync(appContext, modelProvider.version(), newestSyncTime, locale)
-            LOG.info(
-                "syncFromRemote success, locale=$locale, date=${Date(newestSyncTime ?: lastSync).simpleFormat()}"
-            )
-        } catch (cause: Throwable) {
-            LOG.error("syncFromRemote error", cause)
         }
     }
 

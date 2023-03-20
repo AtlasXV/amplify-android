@@ -30,7 +30,7 @@ open class ModelQueryPredicateFactory(private val appContext: Context) {
         val rebuildLocale = lastLocale != locale
         val targetSync = if (rebuildLocale && modelClass.simpleName.endsWith("Locale")) 0 else lastSync
         LOG.info(
-            "Start sync, lastLocale=$lastLocale, target locale=$locale, lastSync=${
+            "Start sync ${modelClass.simpleName}, lastLocale=$lastLocale, target locale=$locale, lastSync=${
                 Date(targetSync).simpleFormat()
             }"
         )
