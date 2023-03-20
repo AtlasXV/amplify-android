@@ -1,7 +1,5 @@
 package com.atlasv.android.amplify.simpleappsync.ext
 
-import com.amplifyframework.api.aws.GraphQLRequestOptions
-import com.amplifyframework.api.aws.ext.AppSyncGraphQLRequestFactoryExt
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.api.graphql.model.ModelPagination
