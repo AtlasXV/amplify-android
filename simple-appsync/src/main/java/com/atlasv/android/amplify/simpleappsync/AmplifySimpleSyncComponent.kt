@@ -27,7 +27,7 @@ class AmplifySimpleSyncComponent(
     private val dataStoreConfiguration: DataStoreConfiguration,
     private val modelProvider: ModelProvider,
     private val schemaRegistry: SchemaRegistry,
-    private val mergeListFactory: MergeRequestFactory = DefaultMergeRequestFactory,
+    private val mergeListFactory: MergeRequestFactory,
     private val modelPreSaveAction: (Model) -> Unit = {}
 ) {
 

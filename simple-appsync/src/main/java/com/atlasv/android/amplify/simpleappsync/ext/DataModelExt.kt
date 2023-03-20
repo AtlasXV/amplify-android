@@ -103,7 +103,7 @@ fun <T : Model> Class<T>.queryField(fieldName: String): QueryField? {
     }
 }
 
-fun QueryPredicate.andIfNotNull(newPredicate: QueryPredicate?): QueryPredicate {
+fun QueryPredicate.then(newPredicate: QueryPredicate?): QueryPredicate {
     newPredicate ?: return this
     return this.and(newPredicate)
 }
