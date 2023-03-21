@@ -1,7 +1,6 @@
 package com.atlasv.android.amplify.simpleappsync
 
 import android.content.Context
-import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelProvider
 import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.datastore.DataStoreConfiguration
@@ -25,22 +24,11 @@ class AmplifySimpleSyncComponent(
     private val dataStoreConfiguration: DataStoreConfiguration,
     private val modelProvider: ModelProvider,
     private val schemaRegistry: SchemaRegistry,
-    private val mergeListFactory: MergeRequestFactory,
-    private val modelPreSaveAction: (Model) -> Unit = {}
+    private val mergeListFactory: MergeRequestFactory
 ) {
     private val mutex = Mutex()
     val storage by lazy {
-        AmplifySqliteStorage(appContext, dataStoreConfiguration, object : ModelProvider {
-            override fun models(): MutableSet<Class<out Model>> {
-                return modelProvider.models().filterNot {
-                    it.simpleName.endsWith("Locale")
-                }.toMutableSet()
-            }
-
-            override fun version(): String {
-                return modelProvider.version()
-            }
-        }, schemaRegistry)
+        AmplifySqliteStorage(appContext, dataStoreConfiguration, modelProvider, schemaRegistry)
     }
 
     val merger by lazy {
