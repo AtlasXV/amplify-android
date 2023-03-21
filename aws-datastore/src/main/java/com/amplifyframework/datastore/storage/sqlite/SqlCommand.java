@@ -29,7 +29,7 @@ import java.util.Objects;
  * An encapsulation of the information required to
  * create a SQL table.
  */
-final class SqlCommand {
+public final class SqlCommand {
     // The name of the SQL table
     private final String tableName;
 
@@ -57,7 +57,7 @@ final class SqlCommand {
      * @param sqlStatement create table command in string representation
      * @param bindings a list of arguments to be bound to the sqlStatement
      */
-    SqlCommand(@NonNull String tableName,
+    public SqlCommand(@NonNull String tableName,
                @NonNull String sqlStatement,
                @NonNull List<Object> bindings) {
         this.tableName = Objects.requireNonNull(tableName);

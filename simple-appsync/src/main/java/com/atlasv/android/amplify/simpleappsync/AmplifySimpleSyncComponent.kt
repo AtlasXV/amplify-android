@@ -3,6 +3,7 @@ package com.atlasv.android.amplify.simpleappsync
 import android.content.Context
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelProvider
+import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.core.model.query.Where
 import com.amplifyframework.core.model.query.predicate.QueryField
@@ -14,6 +15,7 @@ import com.atlasv.android.amplify.simpleappsync.ext.*
 import com.atlasv.android.amplify.simpleappsync.request.MergeRequestFactory
 import com.atlasv.android.amplify.simpleappsync.response.AmplifyModelMerger
 import com.atlasv.android.amplify.simpleappsync.storage.AmplifySqliteStorage
+import com.atlasv.android.amplify.simpleappsync.storage.SQLCommandFactoryExt
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.*
@@ -66,13 +68,7 @@ class AmplifySimpleSyncComponent(
                 }
 
                 val request = mergeListFactory.create(
-                    appContext,
-                    dataStoreConfiguration,
-                    modelProvider,
-                    schemaRegistry,
-                    lastSync,
-                    grayRelease,
-                    locale
+                    appContext, dataStoreConfiguration, modelProvider, schemaRegistry, lastSync, grayRelease, locale
                 )
                 val responseItemGroups = Amplify.API.query(request).data.map {
                     it.data.items.toList()
@@ -92,9 +88,7 @@ class AmplifySimpleSyncComponent(
                 }
 
                 for (group in responseItemGroups) {
-                    applyLocaleModels(group).also {
-                        merger.mergeAll(it)
-                    }
+                    applyLocaleModels(group)
                 }
                 AmplifyExtSettings.saveLastSync(appContext, modelProvider.version(), newestSyncTime, locale)
                 LOG.info(
@@ -113,40 +107,24 @@ class AmplifySimpleSyncComponent(
         return maxOf(dbInitTime, AmplifyExtSettings.getLastSyncTimestamp(appContext))
     }
 
-    private fun applyLocaleModels(localeModels: List<ModelWithMetadata<Model>>): List<ModelWithMetadata<Model>> {
-        val firstLocaleModel = localeModels.firstOrNull()?.model ?: return emptyList()
+    private fun applyLocaleModels(localeModels: List<ModelWithMetadata<Model>>) {
+        val firstLocaleModel = localeModels.firstOrNull()?.model ?: return
         if (!firstLocaleModel.isLocaleMode) {
-            return emptyList()
+            return
         }
         val modelClass = modelProvider.models().find {
             it.simpleName == firstLocaleModel.modelName.removeSuffix("Locale")
-        } ?: return emptyList()
-        val modifiedModels = arrayListOf<ModelWithMetadata<Model>>()
+        } ?: return
         for (localeModel in localeModels) {
             if (localeModel.isDeleted) {
                 continue
             }
-            val materialModel = storage.query(
-                modelClass, Where.matches(QueryField.field("id").eq(localeModel.model.materialID))
-            )?.firstOrNull() ?: continue
-            localizeModel(materialModel, localeModel.model)
-            modifiedModels.add(
-                ModelWithMetadata(
-                    materialModel, ModelMetadata(
-                        materialModel.modelName + "|" + materialModel.primaryKeyString,
-                        false,
-                        localeModel.syncMetadata.version,
-                        localeModel.syncMetadata.lastChangedAt
-                    )
-                )
-            )
+            try {
+                merger.localize(modelClass, localeModel.model)
+            } catch (cause: Throwable) {
+                LOG.error("localize error", cause)
+            }
         }
-        return modifiedModels
-    }
-
-    private fun localizeModel(model: Model, localeModel: Model) {
-        model.sort = localeModel.sort
-        model.itemDisplayName = localeModel.itemName?.takeIf { it.isNotEmpty() } ?: model.itemName
     }
 
     companion object {

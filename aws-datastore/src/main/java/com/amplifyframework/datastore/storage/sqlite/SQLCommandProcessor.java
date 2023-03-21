@@ -34,7 +34,7 @@ import java.util.Objects;
  * its own transaction.  In the future, we can extend this class to support batching  multiple commands in the same
  * transaction to improve performance.
  */
-final class SQLCommandProcessor {
+public final class SQLCommandProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final SQLiteDatabase sqliteDatabase;
@@ -69,7 +69,7 @@ final class SQLCommandProcessor {
         }
     }
 
-    void execute(SqlCommand command) throws DataStoreException {
+    public void execute(SqlCommand command) throws DataStoreException {
         SQLiteStatement sqliteStatement = sqliteDatabase.compileStatement(command.sqlStatement());
         try {
             long startTime = System.currentTimeMillis();

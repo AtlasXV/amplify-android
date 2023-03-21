@@ -126,7 +126,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private SQLiteStorageHelper sqliteStorageHelper;
 
     // Responsible for executing all commands on the SQLiteDatabase.
-    private SQLCommandProcessor sqlCommandProcessor;
+    public SQLCommandProcessor sqlCommandProcessor;
 
     // Factory that produces SQL commands.
     private SQLCommandFactory sqlCommandFactory;
