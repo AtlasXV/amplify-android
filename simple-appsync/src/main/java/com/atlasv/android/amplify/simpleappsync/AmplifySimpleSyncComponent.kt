@@ -5,9 +5,9 @@ import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelProvider
 import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.datastore.DataStoreConfiguration
-import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.kotlin.core.Amplify
-import com.atlasv.android.amplify.simpleappsync.ext.*
+import com.atlasv.android.amplify.simpleappsync.ext.AmplifyExtSettings
+import com.atlasv.android.amplify.simpleappsync.ext.simpleFormat
 import com.atlasv.android.amplify.simpleappsync.request.MergeRequestFactory
 import com.atlasv.android.amplify.simpleappsync.response.AmplifyModelMerger
 import com.atlasv.android.amplify.simpleappsync.storage.AmplifySqliteStorage
@@ -44,7 +44,7 @@ class AmplifySimpleSyncComponent(
     }
 
     val merger by lazy {
-        AmplifyModelMerger(storage, modelPreSaveAction, modelProvider)
+        AmplifyModelMerger(storage, modelProvider)
     }
 
     suspend fun syncFromRemote(

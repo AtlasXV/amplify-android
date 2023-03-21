@@ -81,18 +81,6 @@ val Model.materialID
         return resolveMethod(if (this.javaClass.simpleName == "VFXLocale") "getVfxId" else "getMaterialId")
     }
 
-fun <T : Model> T.ensureDisplayName() {
-    try {
-        if (this.javaClass.methods.any { it.name == "getName" } && this.javaClass.methods.any { it.name == "getDisplayName" }) {
-            if (this.itemDisplayName.isNullOrEmpty()) {
-                this.itemDisplayName = this.itemName
-            }
-        }
-    } catch (cause: Throwable) {
-        //
-    }
-}
-
 fun Date.simpleFormat(): String {
     return SimpleDateFormat.getDateTimeInstance().format(this)
 }

@@ -9,7 +9,6 @@ import com.amplifyframework.datastore.DataStoreConfiguration
 import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent
 import com.atlasv.android.amplify.simpleappsync.ext.AmplifyExtSettings
 import com.atlasv.android.amplify.simpleappsync.ext.queryField
-import com.atlasv.android.amplify.simpleappsync.ext.simpleFormat
 import com.atlasv.android.amplify.simpleappsync.ext.then
 import java.util.*
 
