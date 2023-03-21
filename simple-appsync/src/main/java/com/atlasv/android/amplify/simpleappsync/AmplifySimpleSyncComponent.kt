@@ -21,9 +21,9 @@ import java.util.concurrent.TimeUnit
  */
 class AmplifySimpleSyncComponent(
     private val appContext: Context,
-    private val dataStoreConfiguration: DataStoreConfiguration,
-    private val modelProvider: ModelProvider,
-    private val schemaRegistry: SchemaRegistry,
+    val dataStoreConfiguration: DataStoreConfiguration,
+    val modelProvider: ModelProvider,
+    val schemaRegistry: SchemaRegistry,
     private val mergeListFactory: MergeRequestFactory
 ) {
     private val mutex = Mutex()

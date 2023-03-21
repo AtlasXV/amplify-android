@@ -21,7 +21,7 @@ class AmplifySqliteStorage(
     private val schemaRegistry: SchemaRegistry
 ) {
     private val initializationsPending = CountDownLatch(1)
-    private val sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider).also {
+    val sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider).also {
         initSQLiteStorageAdapter(it)
     }
 

@@ -43,7 +43,7 @@ public final class SQLCommandProcessor {
         this.sqliteDatabase = sqliteDatabase;
     }
 
-    Cursor rawQuery(SqlCommand command) throws DataStoreException {
+    public Cursor rawQuery(SqlCommand command) throws DataStoreException {
         try {
             long startTime = System.currentTimeMillis();
             Cursor result = sqliteDatabase.rawQuery(command.sqlStatement(), command.getBindingsAsArray());
