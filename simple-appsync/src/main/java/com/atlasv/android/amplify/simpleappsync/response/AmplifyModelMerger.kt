@@ -12,7 +12,8 @@ import com.atlasv.android.amplify.simpleappsync.storage.saveList
  * 2022/12/6
  */
 class AmplifyModelMerger(
-    private val sqliteStorage: AmplifySqliteStorage, private val mergeToDbStrategy: ItemMergeToDbStrategy
+    private val sqliteStorage: AmplifySqliteStorage,
+    private val mergeToDbStrategy: ItemMergeToDbStrategy = ItemMergeToDbStrategy()
 ) {
 
     fun mergeResponse(responseItemGroups: List<List<ModelWithMetadata<Model>>>) {

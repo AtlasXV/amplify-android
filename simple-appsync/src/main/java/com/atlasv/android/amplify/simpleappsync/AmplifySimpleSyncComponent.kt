@@ -44,7 +44,7 @@ class AmplifySimpleSyncComponent(
     }
 
     val merger by lazy {
-        AmplifyModelMerger(storage, modelProvider)
+        AmplifyModelMerger(storage)
     }
 
     suspend fun syncFromRemote(
