@@ -29,17 +29,11 @@ open class ModelQueryPredicateFactory(private val appContext: Context) {
         val lastLocale = AmplifyExtSettings.getLastModelLocale(appContext)
         val rebuildLocale = lastLocale != locale
         val targetSync = if (rebuildLocale && modelClass.simpleName.endsWith("Locale")) 0 else lastSync
-        LOG.info(
-            "Start sync ${modelClass.simpleName}, lastLocale=$lastLocale, target locale=$locale, lastSync=${
-                Date(targetSync).simpleFormat()
-            }"
-        )
-
         val predicate =
             dataStoreConfiguration.syncExpressions[modelClass.simpleName]?.resolvePredicate() ?: QueryPredicates.all()
         return predicate.then(modelClass.queryField("grayRelease")?.gt(grayRelease))
             .then(modelClass.queryField("locale")?.eq(locale)).let {
-                if (lastSync > 0) {
+                if (targetSync > 0) {
                     it.then(modelClass.queryField("updatedAt")?.gt(Temporal.DateTime(Date(lastSync), 0)))
                 } else {
                     it

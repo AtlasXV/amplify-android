@@ -3,19 +3,14 @@ package com.atlasv.android.amplify.simpleappsync
 import android.content.Context
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelProvider
-import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.core.model.SchemaRegistry
-import com.amplifyframework.core.model.query.Where
-import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.datastore.DataStoreConfiguration
-import com.amplifyframework.datastore.appsync.ModelMetadata
 import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.kotlin.core.Amplify
 import com.atlasv.android.amplify.simpleappsync.ext.*
 import com.atlasv.android.amplify.simpleappsync.request.MergeRequestFactory
 import com.atlasv.android.amplify.simpleappsync.response.AmplifyModelMerger
 import com.atlasv.android.amplify.simpleappsync.storage.AmplifySqliteStorage
-import com.atlasv.android.amplify.simpleappsync.storage.SQLCommandFactoryExt
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.*
@@ -49,7 +44,7 @@ class AmplifySimpleSyncComponent(
     }
 
     val merger by lazy {
-        AmplifyModelMerger(storage, modelPreSaveAction)
+        AmplifyModelMerger(storage, modelPreSaveAction, modelProvider)
     }
 
     suspend fun syncFromRemote(
@@ -80,16 +75,7 @@ class AmplifySimpleSyncComponent(
                 }?.takeIf { it > lastSync }?.also {
                     LOG.info("newestSyncTime=$it")
                 }
-                for (group in responseItemGroups) {
-                    if (group.firstOrNull()?.model?.isLocaleMode == true) {
-                        continue
-                    }
-                    merger.mergeAll(group)
-                }
-
-                for (group in responseItemGroups) {
-                    applyLocaleModels(group)
-                }
+                merger.mergeResponse(responseItemGroups)
                 AmplifyExtSettings.saveLastSync(appContext, modelProvider.version(), newestSyncTime, locale)
                 LOG.info(
                     "syncFromRemote success, locale=$locale, date=${Date(newestSyncTime ?: lastSync).simpleFormat()}"
@@ -105,26 +91,6 @@ class AmplifySimpleSyncComponent(
             return dbInitTime
         }
         return maxOf(dbInitTime, AmplifyExtSettings.getLastSyncTimestamp(appContext))
-    }
-
-    private fun applyLocaleModels(localeModels: List<ModelWithMetadata<Model>>) {
-        val firstLocaleModel = localeModels.firstOrNull()?.model ?: return
-        if (!firstLocaleModel.isLocaleMode) {
-            return
-        }
-        val modelClass = modelProvider.models().find {
-            it.simpleName == firstLocaleModel.modelName.removeSuffix("Locale")
-        } ?: return
-        for (localeModel in localeModels) {
-            if (localeModel.isDeleted) {
-                continue
-            }
-            try {
-                merger.localize(modelClass, localeModel.model)
-            } catch (cause: Throwable) {
-                LOG.error("localize error", cause)
-            }
-        }
     }
 
     companion object {
