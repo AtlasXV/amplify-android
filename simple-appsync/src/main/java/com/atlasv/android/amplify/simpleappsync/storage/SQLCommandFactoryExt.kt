@@ -18,13 +18,41 @@ import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent
 object SQLCommandFactoryExt {
     private const val COLUMN_NAME = "name"
     private const val COLUMN_SORT = "sort"
-    private val LOG = AmplifySimpleSyncComponent.LOG
+    val LOG get() = AmplifySimpleSyncComponent.LOG
 
-    private fun buildWhereParam(stringBuilder: StringBuilder, columnName: String) {
+    /**
+     * `name` = ?
+     */
+    fun buildWhereParam(stringBuilder: StringBuilder, columnName: String) {
         stringBuilder.append(Wrap.inBackticks(columnName)).append(SqlKeyword.DELIMITER).append(SqlKeyword.EQUAL)
             .append(SqlKeyword.DELIMITER).append("?")
     }
 
+    /**
+     * UPDATE `VFX` SET
+     */
+    fun buildUpdateTableStateHeader(tableName: String): StringBuilder {
+        return StringBuilder().append("UPDATE").append(SqlKeyword.DELIMITER).append(Wrap.inBackticks(tableName))
+            .append(SqlKeyword.DELIMITER).append("SET").append(SqlKeyword.DELIMITER)
+    }
+
+    fun buildMatchIdSQLPredicate(sqliteTable: SQLiteTable, id: String): SQLPredicate {
+        val primaryKeyName = sqliteTable.primaryKeyColumnName
+        val matchId: QueryPredicate = QueryField.field(primaryKeyName).eq(id)
+        return SQLPredicate(matchId)
+    }
+
+    /**
+     * WHERE `VFX`.`id` = ?;
+     */
+    fun appendWhereMatchIdStatement(stringBuilder: StringBuilder, sqlPredicate: SQLPredicate) {
+        stringBuilder.append(SqlKeyword.DELIMITER).append(SqlKeyword.WHERE).append(SqlKeyword.DELIMITER)
+            .append(sqlPredicate).append(";")
+    }
+
+    /**
+     * UPDATE `VFX` SET `name` = ?, `sort` = ? WHERE `VFX`.`id` = ?;
+     */
     fun updateLocaleFor(
         modelSchema: ModelSchema, modelId: String, itemDisplayName: String?, sort: Int?
     ): SqlCommand? {
@@ -32,9 +60,7 @@ object SQLCommandFactoryExt {
         val bindings = arrayListOf<Any>()
 
         val table = SQLiteTable.fromSchema(modelSchema)
-        val stringBuilder = StringBuilder()
-        stringBuilder.append("UPDATE").append(SqlKeyword.DELIMITER).append(Wrap.inBackticks(table.name))
-            .append(SqlKeyword.DELIMITER).append("SET").append(SqlKeyword.DELIMITER)
+        val stringBuilder = buildUpdateTableStateHeader(table.name)
 
         val columns = table.sortedColumns
         val columnsIterator: Iterator<SQLiteColumn> = columns.iterator()
@@ -63,16 +89,11 @@ object SQLCommandFactoryExt {
 
         // Append WHERE statement
         val sqliteTable = SQLiteTable.fromSchema(modelSchema)
-        val primaryKeyName = sqliteTable.primaryKeyColumnName
-        val matchId: QueryPredicate = QueryField.field(primaryKeyName).eq(modelId)
-        val sqlPredicate = SQLPredicate(matchId)
-        stringBuilder.append(SqlKeyword.DELIMITER).append(SqlKeyword.WHERE).append(SqlKeyword.DELIMITER)
-            .append(sqlPredicate).append(";")
-
+        val sqlPredicate = buildMatchIdSQLPredicate(sqliteTable, modelId)
+        appendWhereMatchIdStatement(stringBuilder, sqlPredicate)
         val preparedUpdateStatement = stringBuilder.toString()
 
         bindings.addAll(sqlPredicate.bindings) // WHERE clause
-
         return SqlCommand(
             table.name, preparedUpdateStatement, bindings
         )
