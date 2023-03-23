@@ -169,4 +169,12 @@ public final class QueryField {
     public QuerySortBy descending() {
         return new QuerySortBy(modelName, fieldName, QuerySortOrder.DESCENDING);
     }
+
+    public String getFieldName() {
+        return fieldName;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
 }
