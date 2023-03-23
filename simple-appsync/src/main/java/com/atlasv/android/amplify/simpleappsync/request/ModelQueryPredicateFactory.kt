@@ -18,13 +18,12 @@ open class ModelQueryPredicateFactory {
         modelClass: Class<T>,
         dataStoreConfiguration: DataStoreConfiguration,
         lastSync: Long,
-        grayRelease: Int,
-        locale: String
+        grayRelease: Int
     ): QueryPredicate {
         val predicate =
             dataStoreConfiguration.syncExpressions[modelClass.simpleName]?.resolvePredicate() ?: QueryPredicates.all()
         return predicate.then(modelClass.queryField("grayRelease")?.gt(grayRelease))
-            .then(modelClass.queryField("locale")?.eq(locale)).let {
+            .let {
                 if (lastSync > 0) {
                     it.then(modelClass.queryField("updatedAt")?.gt(Temporal.DateTime(Date(lastSync), 0)))
                 } else {

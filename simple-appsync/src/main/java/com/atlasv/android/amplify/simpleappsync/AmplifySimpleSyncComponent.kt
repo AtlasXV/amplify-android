@@ -38,7 +38,7 @@ class AmplifySimpleSyncComponent(
     }
 
     suspend fun syncFromRemote(
-        grayRelease: Int, dbInitTime: Long, locale: String, dataExpireInterval: Long = TimeUnit.DAYS.toMillis(30)
+        grayRelease: Int, dbInitTime: Long, dataExpireInterval: Long = TimeUnit.DAYS.toMillis(30)
     ) {
         mutex.withLock {
             try {
@@ -53,7 +53,7 @@ class AmplifySimpleSyncComponent(
                 }
 
                 val request = mergeListFactory.create(
-                    appContext, dataStoreConfiguration, modelProvider, schemaRegistry, lastSync, grayRelease, locale
+                    appContext, dataStoreConfiguration, modelProvider, schemaRegistry, lastSync, grayRelease
                 )
                 val responseItemGroups = Amplify.API.query(request).data.map {
                     it.data.items.toList()
@@ -66,9 +66,9 @@ class AmplifySimpleSyncComponent(
                     LOG.info("newestSyncTime=$it")
                 }
                 merger.mergeResponse(responseItemGroups)
-                AmplifyExtSettings.saveLastSync(appContext, modelProvider.version(), newestSyncTime, locale)
+                AmplifyExtSettings.saveLastSync(appContext, modelProvider.version(), newestSyncTime)
                 LOG.info(
-                    "syncFromRemote success, locale=$locale, date=${Date(newestSyncTime ?: lastSync).simpleFormat()}"
+                    "syncFromRemote success, date=${Date(newestSyncTime ?: lastSync).simpleFormat()}"
                 )
             } catch (cause: Throwable) {
                 LOG.error("syncFromRemote error", cause)

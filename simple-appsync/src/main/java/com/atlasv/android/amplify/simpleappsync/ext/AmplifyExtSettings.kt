@@ -41,7 +41,7 @@ object AmplifyExtSettings {
         }
     }
 
-    suspend fun saveLastSync(context: Context, dbVersion: String, timestamp: Long?, locale: String) {
+    suspend fun saveLastSync(context: Context, dbVersion: String, timestamp: Long?) {
         saveLastSyncDbVersion(context, dbVersion)
         saveLastSyncTimestamp(context, timestamp)
     }

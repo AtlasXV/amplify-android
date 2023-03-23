@@ -22,8 +22,7 @@ interface MergeRequestFactory {
         modelProvider: ModelProvider,
         schemaRegistry: SchemaRegistry,
         lastSync: Long,
-        grayRelease: Int,
-        locale: String
+        grayRelease: Int
     ): GraphQLRequest<List<GraphQLResponse<PaginatedResult<ModelWithMetadata<Model>>>>>
 }
 

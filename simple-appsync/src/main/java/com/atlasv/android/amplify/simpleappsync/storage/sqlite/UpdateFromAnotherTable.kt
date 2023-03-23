@@ -17,7 +17,7 @@ class UpdateFromAnotherTable(
     private val LOG get() = AmplifySimpleSyncComponent.LOG
     private val targetTableName = targetModelClass.simpleName
     private val fromTableName = fromModelClass.simpleName
-    fun execute(fieldPairs: List<Pair<String, String>>, fromMatchKey: String) {
+    fun execute(fieldPairs: List<Pair<String, String>>, fromMatchKey: String, conditionStatements: List<String>) {
         val updateColumns = fieldPairs.joinToString(prefix = "(", postfix = ")") { (targetField, _) ->
             targetField
         }
@@ -26,14 +26,18 @@ class UpdateFromAnotherTable(
         }
 
         val isNotNullStatement = fieldPairs.joinToString(" AND ") { (_, fromField) ->
-            "${fromField} IS NOT NULL"
+            "$fromField IS NOT NULL"
         }
 
         val isNotEqualStatement = fieldPairs.joinToString(" AND ") { (targetField, fromField) ->
-            "${fromField} != `$targetTableName`.${targetField}"
+            "$fromField != `$targetTableName`.${targetField}"
         }
 
-        val matchIdStatement = "${fromMatchKey} = `$targetTableName`.id"
+        val matchIdStatement = "$fromMatchKey = `$targetTableName`.id"
+
+        val conditionStatement = conditionStatements.joinToString(" AND ") {
+            it
+        }
 
         // UPDATE `VFX` SET (displayName, sort) = (SELECT name, sort from `VFXLocale` WHERE vfxID = `VFX`.id);
         val sqlStatement =
@@ -42,7 +46,7 @@ class UpdateFromAnotherTable(
                     "(SELECT $fromColumns FROM `$fromTableName` " +
                     "WHERE $matchIdStatement " +
                     "AND $isNotNullStatement " +
-                    "AND $isNotEqualStatement);"
+                    "AND $isNotEqualStatement AND $conditionStatement);"
         LOG.info("UpdateFromAnotherTable build sqlStatement: $sqlStatement")
         val command = SqlCommand(targetTableName, sqlStatement, emptyList())
         try {

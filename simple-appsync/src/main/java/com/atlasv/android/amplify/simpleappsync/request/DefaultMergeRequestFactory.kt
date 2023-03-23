@@ -24,16 +24,14 @@ class DefaultMergeRequestFactory(private val predicateFactory: ModelQueryPredica
         modelProvider: ModelProvider,
         schemaRegistry: SchemaRegistry,
         lastSync: Long,
-        grayRelease: Int,
-        locale: String
+        grayRelease: Int
     ): GraphQLRequest<List<GraphQLResponse<PaginatedResult<ModelWithMetadata<Model>>>>> {
         val requests = modelProvider.models().map {
             getModelRequest(
                 it,
                 dataStoreConfiguration,
                 lastSync,
-                grayRelease,
-                locale
+                grayRelease
             ) as AppSyncGraphQLRequest<Any>
         }
 
@@ -72,17 +70,16 @@ class DefaultMergeRequestFactory(private val predicateFactory: ModelQueryPredica
         }
     }
 
-    private suspend fun <T : Model> getModelRequest(
+    private fun <T : Model> getModelRequest(
         modelClass: Class<T>,
         dataStoreConfiguration: DataStoreConfiguration,
         lastSync: Long,
-        grayRelease: Int,
-        locale: String
+        grayRelease: Int
     ): GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> {
         val pageLimit = ModelPagination.limit(Int.MAX_VALUE)
         return AppSyncGraphQLRequestFactory.buildQuery(
             modelClass,
-            predicateFactory.create(modelClass, dataStoreConfiguration, lastSync, grayRelease, locale),
+            predicateFactory.create(modelClass, dataStoreConfiguration, lastSync, grayRelease),
             pageLimit.limit,
             TypeMaker.getParameterizedType(
                 PaginatedResult::class.java, ModelWithMetadata::class.java, modelClass
