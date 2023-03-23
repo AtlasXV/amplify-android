@@ -3,7 +3,7 @@ package com.atlasv.android.amplify.simpleappsync.response
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
-import com.atlasv.android.amplify.simpleappsync.response.merge.ItemMergeToDbStrategy
+import com.atlasv.android.amplify.simpleappsync.response.merge.ItemMergeStrategy
 import com.atlasv.android.amplify.simpleappsync.storage.AmplifySqliteStorage
 import com.atlasv.android.amplify.simpleappsync.storage.deleteList
 import com.atlasv.android.amplify.simpleappsync.storage.saveList
@@ -14,7 +14,7 @@ import com.atlasv.android.amplify.simpleappsync.storage.saveList
  */
 class AmplifyModelMerger(
     private val sqliteStorage: AmplifySqliteStorage,
-    private val mergeToDbStrategy: ItemMergeToDbStrategy = ItemMergeToDbStrategy()
+    private val itemMergeStrategy: ItemMergeStrategy
 ) {
 
     fun mergeResponse(responseItemGroups: List<List<ModelWithMetadata<Model>>>) {
@@ -22,7 +22,7 @@ class AmplifyModelMerger(
             for (group in responseItemGroups) {
                 mergeAll(adapter, group)
             }
-            mergeToDbStrategy.onAfterSaved()
+            itemMergeStrategy.onAfterSaved(sqliteStorage)
         }
     }
 

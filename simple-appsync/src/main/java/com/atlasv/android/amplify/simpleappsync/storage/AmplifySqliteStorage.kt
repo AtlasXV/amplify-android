@@ -15,10 +15,10 @@ import java.util.concurrent.CountDownLatch
  * 2022/12/6
  */
 class AmplifySqliteStorage(
-    private val appContext: Context,
-    private val dataStoreConfiguration: DataStoreConfiguration,
-    private val modelProvider: ModelProvider,
-    private val schemaRegistry: SchemaRegistry
+    val appContext: Context,
+    val dataStoreConfiguration: DataStoreConfiguration,
+    val modelProvider: ModelProvider,
+    val schemaRegistry: SchemaRegistry
 ) {
     private val initializationsPending = CountDownLatch(1)
     val sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider).also {
