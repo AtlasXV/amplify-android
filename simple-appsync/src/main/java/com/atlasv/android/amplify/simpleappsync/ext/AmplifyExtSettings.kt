@@ -17,12 +17,8 @@ import kotlinx.coroutines.flow.firstOrNull
 val Context.amplifySettingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "amplify_settings")
 
 object AmplifyExtSettings {
-    private const val KEY_LAST_LOCALE = "last_locale"
     private const val KEY_SYNC_DB_VERSION = "sync_db_version"
     private const val KEY_SYNC_TIMESTAMP = "sync_timestamp"
-    suspend fun getLastModelLocale(context: Context): String? {
-        return context.amplifySettingsDataStore.data.firstOrNull()?.get(stringPreferencesKey(KEY_LAST_LOCALE))
-    }
 
     suspend fun getLastSyncDbVersion(context: Context): String? {
         return context.amplifySettingsDataStore.data.firstOrNull()?.get(stringPreferencesKey(KEY_SYNC_DB_VERSION))
@@ -48,12 +44,5 @@ object AmplifyExtSettings {
     suspend fun saveLastSync(context: Context, dbVersion: String, timestamp: Long?, locale: String) {
         saveLastSyncDbVersion(context, dbVersion)
         saveLastSyncTimestamp(context, timestamp)
-        saveLastModelLocale(context, locale)
-    }
-
-    private suspend fun saveLastModelLocale(context: Context, locale: String) {
-        context.amplifySettingsDataStore.edit {
-            it[stringPreferencesKey(KEY_LAST_LOCALE)] = locale
-        }
     }
 }
