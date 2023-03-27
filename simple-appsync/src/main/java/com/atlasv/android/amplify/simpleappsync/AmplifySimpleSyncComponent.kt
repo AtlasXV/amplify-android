@@ -11,7 +11,6 @@ import com.atlasv.android.amplify.simpleappsync.ext.AmplifyExtSettings
 import com.atlasv.android.amplify.simpleappsync.ext.simpleFormat
 import com.atlasv.android.amplify.simpleappsync.request.MergeRequestFactory
 import com.atlasv.android.amplify.simpleappsync.response.AmplifyModelMerger
-import com.atlasv.android.amplify.simpleappsync.response.merge.ItemMergeStrategy
 import com.atlasv.android.amplify.simpleappsync.storage.AmplifySqliteStorage
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -28,7 +27,6 @@ class AmplifySimpleSyncComponent(
     val modelProvider: ModelProvider,
     val schemaRegistry: SchemaRegistry,
     private val mergeListFactory: MergeRequestFactory,
-    private val itemMergeStrategy: ItemMergeStrategy,
     sqlCommandFactoryFactory: SQLCommandFactoryFactory,
     cursorValueStringFactory: CursorValueStringFactory
 ) {
@@ -46,7 +44,7 @@ class AmplifySimpleSyncComponent(
     }
 
     val merger by lazy {
-        AmplifyModelMerger(storage, itemMergeStrategy)
+        AmplifyModelMerger(storage)
     }
 
     suspend fun syncFromRemote(
