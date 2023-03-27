@@ -129,7 +129,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public SQLCommandProcessor sqlCommandProcessor;
 
     // Factory that produces SQL commands.
-    private SQLCommandFactory sqlCommandFactory;
+    public SQLCommandFactory sqlCommandFactory;
+
+    public SQLCommandFactoryFactory sqlCommandFactoryFactory;
+
+    public CursorValueStringFactory cursorValueStringFactory;
 
     // The helper object to iterate through associated models of a given model.
     private SQLiteModelTree sqliteModelTree;
@@ -245,7 +249,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * Models. Instantiate {@link SQLiteStorageHelper} to execute those
                  * create commands.
                  */
-                this.sqlCommandFactory = new SQLiteCommandFactory(schemaRegistry, gson);
+                this.sqlCommandFactory = sqlCommandFactoryFactory.create(schemaRegistry, gson);
                 CreateSqlCommands createSqlCommands = getCreateCommands(modelsProvider.modelNames());
                 sqliteStorageHelper = SQLiteStorageHelper.getInstance(
                         context,
@@ -285,6 +289,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 sqlQueryProcessor = new SqlQueryProcessor(sqlCommandProcessor,
                         sqlCommandFactory,
                         schemaRegistry);
+                sqlQueryProcessor.cursorValueStringFactory = cursorValueStringFactory;
                 syncStatus = new SyncStatus(sqlQueryProcessor, dataStoreConfiguration);
 
                 /*

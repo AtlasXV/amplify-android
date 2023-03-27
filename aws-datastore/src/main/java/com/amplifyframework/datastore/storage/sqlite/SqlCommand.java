@@ -69,7 +69,7 @@ public final class SqlCommand {
      * Return the name of the SQL table.
      * @return the name of the SQL table.
      */
-    String tableName() {
+    public String tableName() {
         return tableName;
     }
 
@@ -77,7 +77,7 @@ public final class SqlCommand {
      * Return the create table SQL command in string representation.
      * @return the create table SQL command in string representation.
      */
-    String sqlStatement() {
+    public String sqlStatement() {
         return sqlStatement;
     }
 
@@ -85,7 +85,7 @@ public final class SqlCommand {
      * Return the list of arguments to be bound to the sqlStatement.
      * @return the list of arguments to be bound to the sqlStatement
      */
-    List<Object> getBindings() {
+    public List<Object> getBindings() {
         return Immutable.of(bindings);
     }
 
@@ -95,7 +95,7 @@ public final class SqlCommand {
      * @return the list of arguments to be bound to the sqlStatement
      *         as an array of strings.
      */
-    String[] getBindingsAsArray() {
+    public String[] getBindingsAsArray() {
         if (!hasBindings()) {
             return null;
         }
@@ -118,7 +118,7 @@ public final class SqlCommand {
      * Return true if selectionArgs is not null and not empty.
      * @return true if selectionArgs is not null and not empty.
      */
-    boolean hasBindings() {
+    public boolean hasBindings() {
         return bindings != null && !bindings.isEmpty();
     }
 

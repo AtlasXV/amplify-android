@@ -22,6 +22,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 
 import java.util.Set;
 
@@ -29,7 +30,7 @@ import java.util.Set;
  * A factory that produces the SQLite commands from the
  * {@link ModelSchema} and the {@link com.amplifyframework.core.model.Model}.
  */
-interface SQLCommandFactory {
+public interface SQLCommandFactory {
     /**
      * Generates the CREATE TABLE SQL command from the {@link ModelSchema}.
      * @param modelSchema the schema of a {@link com.amplifyframework.core.model.Model}
@@ -69,6 +70,10 @@ interface SQLCommandFactory {
     @NonNull
     SqlCommand queryFor(@NonNull ModelSchema modelSchema,
                         @NonNull QueryOptions options) throws DataStoreException;
+
+    @NonNull
+    SqlCommand queryFor(@NonNull ModelSchema modelSchema,
+                        @NonNull QueryOptions options, CustomTableJoinConfig config) throws DataStoreException;
 
     /**
      * Generates the SELECT EXISTS command in a raw string representation from

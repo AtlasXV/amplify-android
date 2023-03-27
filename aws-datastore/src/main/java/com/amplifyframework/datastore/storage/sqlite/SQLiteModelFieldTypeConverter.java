@@ -49,6 +49,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import kotlin.Pair;
+
 /**
  * <code>ModelField</code> value converter for SQLite. It converts from SQLite's <code>Cursor</code>
  * to <code>Model</code> properties and from <code>Model</code> properties to values that are
@@ -65,6 +67,8 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
     // Map from inner model name to number of occurrences in the cursor.
     private final Map<String, Integer> cursorInnerModelCounts;
     private final boolean isInnerModel;
+
+    public CursorValueStringFactory cursorValueStringFactory = new CursorValueStringFactory();
 
     SQLiteModelFieldTypeConverter(
             @NonNull ModelSchema parentSchema,
@@ -223,14 +227,12 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                     columnName += modelCount;
                 }
             }
-            
-            final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
-            // This check is necessary, because primitive values will return 0 even when null
-            if (cursor.isNull(columnIndex)) {
+            final Pair<Integer, String> indexStringPair = cursorValueStringFactory.getStringFromCursor(cursor, column);
+            if(indexStringPair == null){
                 return null;
             }
-
-            final String valueAsString = cursor.getString(columnIndex);
+            int columnIndex = indexStringPair.getFirst();
+            String valueAsString = indexStringPair.getSecond();
             LOGGER.verbose(String.format(
                     "Attempt to convert value \"%s\" from field %s of type %s in model %s",
                     valueAsString, field.getName(), field.getTargetType(), parentSchema.getName()

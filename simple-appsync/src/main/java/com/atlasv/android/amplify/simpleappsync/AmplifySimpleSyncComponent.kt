@@ -4,6 +4,8 @@ import android.content.Context
 import com.amplifyframework.core.model.ModelProvider
 import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.datastore.DataStoreConfiguration
+import com.amplifyframework.datastore.storage.sqlite.CursorValueStringFactory
+import com.amplifyframework.datastore.storage.sqlite.SQLCommandFactoryFactory
 import com.amplifyframework.kotlin.core.Amplify
 import com.atlasv.android.amplify.simpleappsync.ext.AmplifyExtSettings
 import com.atlasv.android.amplify.simpleappsync.ext.simpleFormat
@@ -26,11 +28,21 @@ class AmplifySimpleSyncComponent(
     val modelProvider: ModelProvider,
     val schemaRegistry: SchemaRegistry,
     private val mergeListFactory: MergeRequestFactory,
-    private val itemMergeStrategy: ItemMergeStrategy
+    private val itemMergeStrategy: ItemMergeStrategy,
+    sqlCommandFactoryFactory: SQLCommandFactoryFactory,
+    cursorValueStringFactory: CursorValueStringFactory
 ) {
+
     private val mutex = Mutex()
     val storage by lazy {
-        AmplifySqliteStorage(appContext, dataStoreConfiguration, modelProvider, schemaRegistry)
+        AmplifySqliteStorage(
+            appContext,
+            dataStoreConfiguration,
+            modelProvider,
+            schemaRegistry,
+            sqlCommandFactoryFactory,
+            cursorValueStringFactory
+        )
     }
 
     val merger by lazy {

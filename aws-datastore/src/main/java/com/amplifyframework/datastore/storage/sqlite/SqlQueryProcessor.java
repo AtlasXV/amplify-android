@@ -45,6 +45,7 @@ public class SqlQueryProcessor {
     private final SQLCommandFactory sqlCommandFactory;
     private final SQLCommandProcessor sqlCommandProcessor;
     private final Gson gson;
+    public CursorValueStringFactory cursorValueStringFactory = new CursorValueStringFactory();
 
     SqlQueryProcessor(SQLCommandProcessor sqlCommandProcessor,
                       SQLCommandFactory sqlCommandFactory,
@@ -65,7 +66,7 @@ public class SqlQueryProcessor {
             LOG.debug("Querying item for: " + itemClass.getSimpleName());
             final SQLiteModelFieldTypeConverter converter =
                     new SQLiteModelFieldTypeConverter(modelSchema, modelSchemaRegistry, gson);
-
+            converter.cursorValueStringFactory = cursorValueStringFactory;
             if (cursor == null) {
                 onError.accept(new DataStoreException(
                         "Error in getting a cursor to the table for class: " + itemClass.getSimpleName(),

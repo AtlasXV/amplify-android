@@ -57,7 +57,7 @@ import java.util.Set;
  * A factory that produces the SQLite commands for a given
  * {@link Model} and {@link ModelSchema}.
  */
-final class SQLiteCommandFactory implements SQLCommandFactory {
+public class SQLiteCommandFactory implements SQLCommandFactory {
     /**
      * Undefined is the name of the index annotation created by codegen for custom primary key based on the design for
      * Custom primary key.
@@ -70,7 +70,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     /**
      * Default constructor.
      */
-    SQLiteCommandFactory(
+    public SQLiteCommandFactory(
             @NonNull SchemaRegistry schemaRegistry,
             @NonNull Gson gson) {
         this.schemaRegistry = Objects.requireNonNull(schemaRegistry);
@@ -164,6 +164,13 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     @Override
     public SqlCommand queryFor(@NonNull ModelSchema modelSchema,
                                @NonNull QueryOptions options) throws DataStoreException {
+        return queryFor(modelSchema, options, null);
+    }
+
+    @NonNull
+    @Override
+    public SqlCommand queryFor(@NonNull ModelSchema modelSchema,
+                               @NonNull QueryOptions options, CustomTableJoinConfig config) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final String tableName = table.getName();
         StringBuilder rawQuery = new StringBuilder();
@@ -179,6 +186,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         // Joins the foreign keys
         recursivelyBuildJoins(table, columns, joinStatement, tableCount, tableName);
+        if(joinStatement.length() == 0 && config != null){
+            columns.put(config.getTable().getName(), config.getTable().getSortedColumns());
+            joinStatement.append(SqlKeyword.DELIMITER).append(config.getJoinOnStatement());
+        }
 
         // Convert columns to comma-separated column names
         boolean firstTable = true;

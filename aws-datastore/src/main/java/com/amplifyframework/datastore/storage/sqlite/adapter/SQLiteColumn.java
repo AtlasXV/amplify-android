@@ -28,7 +28,7 @@ import com.amplifyframework.util.Wrap;
  */
 public final class SQLiteColumn {
     private static final String SQLITE_NAME_DELIMITER = ".";
-    private static final String CUSTOM_ALIAS_DELIMITER = "_";
+    public static final String CUSTOM_ALIAS_DELIMITER = "_";
 
     private final String name;
     private final String fieldName;

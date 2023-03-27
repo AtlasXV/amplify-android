@@ -6,6 +6,8 @@ import com.amplifyframework.core.model.ModelProvider
 import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.core.model.query.QueryOptions
 import com.amplifyframework.datastore.DataStoreConfiguration
+import com.amplifyframework.datastore.storage.sqlite.CursorValueStringFactory
+import com.amplifyframework.datastore.storage.sqlite.SQLCommandFactoryFactory
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
 import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent.Companion.LOG
 import java.util.concurrent.CountDownLatch
@@ -18,10 +20,14 @@ class AmplifySqliteStorage(
     val appContext: Context,
     val dataStoreConfiguration: DataStoreConfiguration,
     val modelProvider: ModelProvider,
-    val schemaRegistry: SchemaRegistry
+    val schemaRegistry: SchemaRegistry,
+    sqlCommandFactoryFactory: SQLCommandFactoryFactory,
+    cursorValueStringFactory: CursorValueStringFactory
 ) {
     private val initializationsPending = CountDownLatch(1)
     val sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider).also {
+        it.sqlCommandFactoryFactory = sqlCommandFactoryFactory
+        it.cursorValueStringFactory = cursorValueStringFactory
         initSQLiteStorageAdapter(it)
     }
 
