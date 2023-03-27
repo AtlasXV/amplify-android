@@ -8,12 +8,12 @@ import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn
  * 2023/3/25
  */
 open class CursorValueStringFactory {
-    open fun getStringFromCursor(cursor: Cursor, column: SQLiteColumn): Pair<Int, String>? {
+    open fun getStringFromCursor(cursor: Cursor, column: SQLiteColumn): Pair<Int, String?>? {
         val columnIndex = cursor.getColumnIndexOrThrow(column.aliasedName)
         return getStringFromCursor(cursor, columnIndex)
     }
 
-    fun getStringFromCursor(cursor: Cursor, columnIndex: Int): Pair<Int, String>? {
+    fun getStringFromCursor(cursor: Cursor, columnIndex: Int): Pair<Int, String?>? {
         // This check is necessary, because primitive values will return 0 even when null
         if (cursor.isNull(columnIndex)) {
             return null
