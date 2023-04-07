@@ -185,7 +185,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
     }
 
     Map<String, Object> buildMapForModel(@NonNull Cursor cursor) throws DataStoreException {
-        final Map<String, Object> mapForModel = new HashMap<>();
+        final HashMap<String, Object> mapForModel = new HashMap<>();
         for (Map.Entry<String, ModelField> entry : parentSchema.getFields().entrySet()) {
             mapForModel.put(entry.getKey(), convertValueFromSource(cursor, entry.getValue()));
         }
@@ -193,6 +193,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             cursorInnerModelCounts.clear();
             cursorInnerModelCounts.put(parentSchema.getName(), 1);
         }
+        cursorValueStringFactory.onMapForModelBuilt(mapForModel, parentSchema);
         return mapForModel;
     }
 
