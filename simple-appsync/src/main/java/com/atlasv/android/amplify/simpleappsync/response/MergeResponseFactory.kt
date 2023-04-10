@@ -35,7 +35,7 @@ class MergeResponseFactory : GraphQLResponse.Factory {
                 singleObj.put("data", JSONObject().apply {
                     put(k, modelObj)
                 })
-                val childRequest = request.children.find { k == "list${it.modelSchema.name}s" }
+                val childRequest = request.children.find { k == "list${it.queryModelName}" }
                 result.add(gqlResponseFactory.buildResponse(childRequest, singleObj.toString()))
             }
             LOG.info("Build merge response finish")

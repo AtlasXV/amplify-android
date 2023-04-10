@@ -66,7 +66,7 @@ class AmplifySimpleSyncComponent(
                     appContext, dataStoreConfiguration, modelProvider, schemaRegistry, lastSync, grayRelease
                 )
                 val responseItemGroups = Amplify.API.query(request).data.map {
-                    it.data.items.toList()
+                    it.data?.items?.toList().orEmpty()
                 }
                 val newestSyncTime = if (oldDataExpired) currentTime else responseItemGroups.maxOfOrNull { list ->
                     list.maxOfOrNull {

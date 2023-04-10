@@ -127,6 +127,29 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         }
     }
 
+    public String getQueryModelName() {
+        String modelName = Casing.capitalizeFirst(modelSchema.getName());
+        String pluralName = modelSchema.getPluralName() != null &&
+                !modelSchema.getPluralName().isEmpty()
+                ? Casing.capitalizeFirst(modelSchema.getPluralName())
+                : modelName + "s";
+        if (QueryType.LIST.equals(operation)) {
+            modelName = modelSchema.getListPluralName() != null
+                    && !modelSchema.getListPluralName().isEmpty()
+                    ? Casing.capitalizeFirst(modelSchema.getListPluralName())
+                    : pluralName;
+        } else if (QueryType.SYNC.equals(operation)) {
+            // The sync operation name is pluralized using pluralize.js, which uses more complex pluralization rules
+            // than simply adding an 's' at the end (e.g. baby > babies, person > people, etc).  This pluralized name
+            // is an annotation on the codegen'd model class, so we will just grab it from the ModelSchema.
+            modelName = modelSchema.getSyncPluralName() != null
+                    && !modelSchema.getSyncPluralName().isEmpty()
+                    ? Casing.capitalizeFirst(modelSchema.getSyncPluralName())
+                    : pluralName;
+        }
+        return modelName;
+    }
+
     /**
      *  Returns String value used for GraphQL "query" in HTTP request body.
      *
@@ -156,25 +179,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
             inputParameterString = Wrap.inParentheses(TextUtils.join(", ", inputParameters));
         }
 
-        String modelName = Casing.capitalizeFirst(modelSchema.getName());
-        String pluralName = modelSchema.getPluralName() != null &&
-                !modelSchema.getPluralName().isEmpty()
-                ? Casing.capitalizeFirst(modelSchema.getPluralName())
-                : modelName + "s";
-        if (QueryType.LIST.equals(operation)) {
-            modelName = modelSchema.getListPluralName() != null
-                    && !modelSchema.getListPluralName().isEmpty()
-                    ? Casing.capitalizeFirst(modelSchema.getListPluralName())
-                    : pluralName;
-        } else if (QueryType.SYNC.equals(operation)) {
-            // The sync operation name is pluralized using pluralize.js, which uses more complex pluralization rules
-            // than simply adding an 's' at the end (e.g. baby > babies, person > people, etc).  This pluralized name
-            // is an annotation on the codegen'd model class, so we will just grab it from the ModelSchema.
-            modelName = modelSchema.getSyncPluralName() != null
-                    && !modelSchema.getSyncPluralName().isEmpty()
-                    ? Casing.capitalizeFirst(modelSchema.getSyncPluralName())
-                    : pluralName;
-        }
+        String modelName = getQueryModelName();
 
         operationString =
                 Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE)
