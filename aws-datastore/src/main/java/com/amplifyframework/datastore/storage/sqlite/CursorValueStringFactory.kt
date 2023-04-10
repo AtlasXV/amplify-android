@@ -1,7 +1,9 @@
 package com.amplifyframework.datastore.storage.sqlite
 
 import android.database.Cursor
+import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn
+import java.util.HashMap
 
 /**
  * weiping@atlasv.com
@@ -20,4 +22,6 @@ open class CursorValueStringFactory {
         }
         return columnIndex to cursor.getString(columnIndex)
     }
+
+    open fun onMapForModelBuilt(map: HashMap<String, Any>, modelSchema: ModelSchema) {}
 }
