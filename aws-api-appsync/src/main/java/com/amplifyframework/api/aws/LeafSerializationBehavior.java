@@ -27,5 +27,6 @@ public enum LeafSerializationBehavior {
     /**
      * Leaf nodes will serialize all fields.
      */
-    ALL_FIELDS
+    ALL_FIELDS,
+    NONE
 }

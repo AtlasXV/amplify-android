@@ -276,7 +276,7 @@ public final class SelectionSet {
                 String fieldName = field.getName();
                 if (schema.getAssociations().containsKey(fieldName)) {
                     if (List.class.isAssignableFrom(field.getType())) {
-                        if (depth >= 1) {
+                        if (depth >= 1 && !LeafSerializationBehavior.NONE.equals(requestOptions.leafSerializationBehavior())) {
                             ParameterizedType listType = (ParameterizedType) field.getGenericType();
                             Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
                             Set<SelectionSet> fields = wrapPagination(getModelFields(listTypeClass,

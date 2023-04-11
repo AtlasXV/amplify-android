@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Defines options for building a GraphQLRequest when using the DataStore category.
  */
-public final class DataStoreGraphQLRequestOptions implements GraphQLRequestOptions {
+public class DataStoreGraphQLRequestOptions implements GraphQLRequestOptions {
     private static final String ITEMS_KEY = "items";
     private static final String NEXT_TOKEN_KEY = "nextToken";
     private static final String STARTED_AT_KEY = "startedAt";

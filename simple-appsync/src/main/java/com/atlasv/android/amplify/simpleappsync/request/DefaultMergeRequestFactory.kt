@@ -4,6 +4,7 @@ import android.content.Context
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest
 import com.amplifyframework.api.aws.AppSyncGraphQLRequestFactory
 import com.amplifyframework.api.aws.GsonVariablesSerializer
+import com.amplifyframework.api.aws.LeafSerializationBehavior
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
@@ -84,7 +85,11 @@ class DefaultMergeRequestFactory(private val predicateFactory: ModelQueryPredica
             TypeMaker.getParameterizedType(
                 PaginatedResult::class.java, ModelWithMetadata::class.java, modelClass
             ),
-            DataStoreGraphQLRequestOptions()
+            object :DataStoreGraphQLRequestOptions(){
+                override fun leafSerializationBehavior(): LeafSerializationBehavior {
+                    return LeafSerializationBehavior.NONE
+                }
+            }
         )
     }
 
