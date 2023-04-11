@@ -18,7 +18,10 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.util.TypeMaker
 import com.amplifyframework.util.Wrap
 
-class DefaultMergeRequestFactory(private val predicateFactory: ModelQueryPredicateFactory) : MergeRequestFactory {
+class DefaultMergeRequestFactory(
+    private val predicateFactory: ModelQueryPredicateFactory,
+    private val graphQLRequestOptionsFactory: GraphQLRequestOptionsFactory = NoneLeafGraphQLRequestOptionsFactory()
+) : MergeRequestFactory {
     override suspend fun create(
         appContext: Context,
         dataStoreConfiguration: DataStoreConfiguration,
@@ -85,11 +88,7 @@ class DefaultMergeRequestFactory(private val predicateFactory: ModelQueryPredica
             TypeMaker.getParameterizedType(
                 PaginatedResult::class.java, ModelWithMetadata::class.java, modelClass
             ),
-            object :DataStoreGraphQLRequestOptions(){
-                override fun leafSerializationBehavior(): LeafSerializationBehavior {
-                    return LeafSerializationBehavior.NONE
-                }
-            }
+            graphQLRequestOptionsFactory.create(modelClass)
         )
     }
 
