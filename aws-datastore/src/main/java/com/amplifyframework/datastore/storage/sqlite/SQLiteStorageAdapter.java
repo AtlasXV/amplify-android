@@ -131,9 +131,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Factory that produces SQL commands.
     public SQLCommandFactory sqlCommandFactory;
 
-    public SQLCommandFactoryFactory sqlCommandFactoryFactory;
+    public SQLCommandFactoryFactory sqlCommandFactoryFactory = new SQLCommandFactoryFactory();
 
-    public CursorValueStringFactory cursorValueStringFactory;
+    public CursorValueStringFactory cursorValueStringFactory = new CursorValueStringFactory();
 
     // The helper object to iterate through associated models of a given model.
     private SQLiteModelTree sqliteModelTree;
