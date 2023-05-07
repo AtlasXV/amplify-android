@@ -38,11 +38,24 @@ class MergeResponseFactory : GraphQLResponse.Factory {
                 val childRequest = request.children.find { k == "list${it.queryModelName}" }
                 result.add(gqlResponseFactory.buildResponse(childRequest, singleObj.toString()))
             }
+            checkErrors(resObj)
             LOG.info("Build merge response finish")
             return GraphQLResponse(result as R, emptyList())
         } catch (cause: Throwable) {
             LOG.error("buildResponse failed", cause)
             return GraphQLResponse(emptyList<Any>() as R, emptyList())
+        }
+    }
+
+    private fun checkErrors(resObj: JSONObject) {
+        kotlin.runCatching {
+            val errorArray = resObj.optJSONArray("errors")?.takeIf { it.length() > 0 } ?: return
+            for (i in 0 until errorArray.length()) {
+                val item = errorArray.optJSONObject(i) ?: continue
+                val errorType = item.optString("errorType")
+                val message = item.optString("message")
+                LOG.error("Build merge response has error: [$errorType]: $message")
+            }
         }
     }
 
