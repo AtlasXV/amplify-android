@@ -146,12 +146,22 @@ public final class AppSyncGraphQLRequestFactory {
         int limit,
         Type responseType
     ) {
+        return buildQuery(modelClass, predicate, limit, responseType, new ApiGraphQLRequestOptions());
+    }
+
+    public static <R, T extends Model> GraphQLRequest<R> buildQuery(
+        Class<T> modelClass,
+        QueryPredicate predicate,
+        int limit,
+        Type responseType,
+        @NonNull GraphQLRequestOptions requestOptions
+    ) {
         try {
             String modelName = ModelSchema.fromModelClass(modelClass).getName();
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
                                                         .modelClass(modelClass)
                                                         .operation(QueryType.LIST)
-                                                        .requestOptions(new ApiGraphQLRequestOptions())
+                                                        .requestOptions(requestOptions)
                                                         .responseType(responseType);
 
             if (!QueryPredicates.all().equals(predicate)) {
