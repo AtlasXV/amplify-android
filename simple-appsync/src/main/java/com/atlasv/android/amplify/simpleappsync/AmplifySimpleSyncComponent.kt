@@ -11,6 +11,7 @@ import com.atlasv.android.amplify.simpleappsync.ext.AmplifyExtSettings
 import com.atlasv.android.amplify.simpleappsync.ext.simpleFormat
 import com.atlasv.android.amplify.simpleappsync.request.MergeRequestFactory
 import com.atlasv.android.amplify.simpleappsync.response.AmplifyModelMerger
+import com.atlasv.android.amplify.simpleappsync.response.AmplifySyncResponse
 import com.atlasv.android.amplify.simpleappsync.storage.AmplifySqliteStorage
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -49,8 +50,8 @@ class AmplifySimpleSyncComponent(
 
     suspend fun syncFromRemote(
         grayRelease: Int, dbInitTime: Long, dataExpireInterval: Long = TimeUnit.DAYS.toMillis(30)
-    ) {
-        mutex.withLock {
+    ): AmplifySyncResponse? {
+        return mutex.withLock {
             try {
                 var lastSync = getLastSyncTime(dbInitTime)
                 val currentTime = System.currentTimeMillis()
@@ -77,11 +78,14 @@ class AmplifySimpleSyncComponent(
                 }
                 merger.mergeResponse(responseItemGroups)
                 AmplifyExtSettings.saveLastSync(appContext, modelProvider.version(), newestSyncTime)
+                val newestUpdatedTime = newestSyncTime ?: lastSync
                 LOG.info(
-                    "syncFromRemote success, date=${Date(newestSyncTime ?: lastSync).simpleFormat()}"
+                    "syncFromRemote success, newestUpdatedTime=${Date(newestUpdatedTime).simpleFormat()}"
                 )
+                AmplifySyncResponse(newestUpdatedTime = newestUpdatedTime)
             } catch (cause: Throwable) {
                 LOG.error("syncFromRemote error", cause)
+                null
             }
         }
     }
