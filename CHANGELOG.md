@@ -1,3 +1,42 @@
+## [Release 2.8.7](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.7)
+
+### Bug Fixes
+- **predictions:** Use English locale for date/time ([#2491](https://github.com/aws-amplify/amplify-android/issues/2491))
+
+[See all changes between 2.8.6 and 2.8.7](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.6...release_v2.8.7)
+
+## [Release 2.8.6](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.6)
+
+### Bug Fixes
+- **datastore:** Flutter: fail to serialize list of custom type values ([#2462](https://github.com/aws-amplify/amplify-android/issues/2462))
+
+[See all changes between 2.8.5 and 2.8.6](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.5...release_v2.8.6)
+
+## [Release 2.8.5](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.5)
+
+### Miscellaneous
+- @fix(data): Fix reachability debouncer causing delay on local inserts ([#2464](https://github.com/aws-amplify/amplify-android/issues/2464))
+
+[See all changes between 2.8.4 and 2.8.5](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.4...release_v2.8.5)
+
+## [Release 2.8.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.4)
+
+### Bug Fixes
+- **datastore:** send only distinct network events after subscribe ([#2451](https://github.com/aws-amplify/amplify-android/issues/2451))
+
+[See all changes between 2.8.3 and 2.8.4](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.3...release_v2.8.4)
+
+## [Release 2.8.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.3)
+
+### Bug Fixes
+- **datastore:** SerializedCustomType de/serialization ([#2350](https://github.com/aws-amplify/amplify-android/issues/2350))
+- **auth:** Use java.time.Instant for AWSTemporaryCredentials expiration ([#2415](https://github.com/aws-amplify/amplify-android/issues/2415))
+- **datastore:** Load pending mutations one at a time from outbox ([#2428](https://github.com/aws-amplify/amplify-android/issues/2428))
+- **datastore:** register network callback only once in reachability monitor ([#2434](https://github.com/aws-amplify/amplify-android/issues/2434))
+- **api:** Allow null associations on non-required fields. ([#2440](https://github.com/aws-amplify/amplify-android/issues/2440))
+
+[See all changes between 2.8.2 and 2.8.3](https://github.com/aws-amplify/amplify-android/compare/release_v2.8.2...release_v2.8.3)
+
 ## [Release 2.8.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.8.2)
 
 ### Miscellaneous
