@@ -144,34 +144,25 @@ public final class AppSyncGraphQLRequestFactory {
         return buildQuery(modelClass, predicate, limit, responseType);
     }
 
-    public static <R, T extends Model> GraphQLRequest<R> buildQuery(
+    static <R, T extends Model> GraphQLRequest<R> buildQuery(
             Class<T> modelClass,
             QueryPredicate predicate,
             int limit,
             Type responseType
-    ) {
-        return buildQuery(modelClass, predicate, limit, responseType, new ApiGraphQLRequestOptions());
-    }
-
-    public static <R, T extends Model> GraphQLRequest<R> buildQuery(
-            Class<T> modelClass,
-            QueryPredicate predicate,
-            int limit,
-            Type responseType,
-            GraphQLRequestOptions options
     ) {
         try {
             String modelName = ModelSchema.fromModelClass(modelClass).getName();
             AppSyncGraphQLRequest.Builder builder = AppSyncGraphQLRequest.builder()
                     .modelClass(modelClass)
                     .operation(QueryType.LIST)
-                    .requestOptions(options)
+                    .requestOptions(new ApiGraphQLRequestOptions())
                     .responseType(responseType);
 
             if (!QueryPredicates.all().equals(predicate)) {
                 String filterType = "Model" + Casing.capitalizeFirst(modelName) + "FilterInput";
                 builder.variable("filter", filterType, parsePredicate(predicate));
             }
+
             builder.variable("limit", "Int", limit);
             return builder.build();
         } catch (AmplifyException exception) {
