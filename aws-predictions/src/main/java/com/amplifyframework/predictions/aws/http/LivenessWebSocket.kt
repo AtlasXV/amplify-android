@@ -20,10 +20,12 @@ import android.os.Build
 import androidx.annotation.VisibleForTesting
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import aws.smithy.kotlin.runtime.util.emptyAttributes
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.BuildConfig
 import com.amplifyframework.predictions.aws.exceptions.AccessDeniedException
@@ -72,6 +74,7 @@ internal class LivenessWebSocket(
 
     private val signer = AWSV4Signer()
     private var credentials: Credentials? = null
+
     @VisibleForTesting
     internal var webSocket: WebSocket? = null
     internal val challengeId = UUID.randomUUID().toString()
@@ -152,7 +155,6 @@ internal class LivenessWebSocket(
     }
 
     fun start() {
-
         val userAgent = getUserAgent()
 
         val okHttpClient = OkHttpClient.Builder()
@@ -168,7 +170,7 @@ internal class LivenessWebSocket(
 
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val credentials = credentialsProvider.getCredentials()
+                val credentials = credentialsProvider.resolve(emptyAttributes())
                 this@LivenessWebSocket.credentials = credentials
                 val signedUri = signer.getSignedUri(URI.create(endpoint), credentials, region, userAgent)
                 if (signedUri != null) {
@@ -411,10 +413,11 @@ internal class LivenessWebSocket(
     }
 
     fun destroy() {
-        webSocket?.cancel()
+        // Close gracefully; 1000 means "normal closure"
+        webSocket?.close(1000, null)
     }
 
     companion object {
-        private val LOG = Amplify.Logging.forNamespace("amplify:aws-predictions")
+        private val LOG = Amplify.Logging.logger(CategoryType.PREDICTIONS, "amplify:aws-predictions")
     }
 }

@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
@@ -60,7 +61,7 @@ import kotlin.Pair;
  * valid in a <code>SQLiteStatement</code>.
  */
 public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cursor, Model> {
-    private static final Logger LOGGER = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOGGER = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
 
     private final ModelSchema parentSchema;
     private final SchemaRegistry schemaRegistry;
