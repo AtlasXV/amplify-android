@@ -227,7 +227,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                     columnName += modelCount;
                 }
             }
-
+            
             final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
             // This check is necessary, because primitive values will return 0 even when null
             if (cursor.isNull(columnIndex)) {
