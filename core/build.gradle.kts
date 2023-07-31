@@ -53,6 +53,7 @@ dependencies {
     testImplementation(testDependency.jsonassert)
     testImplementation(dependency.gson)
 
+    api("com.atlasv.android:timber:5.0.2")
     androidTestImplementation(project(":testutils"))
 
     androidTestImplementation(dependency.androidx.annotation)

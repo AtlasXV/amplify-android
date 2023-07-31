@@ -57,19 +57,19 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     @SuppressWarnings("deprecation")
     public Logger forNamespace(@Nullable String namespace) {
         String usedNamespace = namespace == null ? AMPLIFY_NAMESPACE : namespace;
-        return new AndroidLogger(usedNamespace, defaultLoggerThreshold);
+        return new TimberLogger(usedNamespace, defaultLoggerThreshold);
     }
 
     @NonNull
     @Override
     public Logger logger(@NonNull String namespace) {
-        return new AndroidLogger(namespace, defaultLoggerThreshold);
+        return new TimberLogger(namespace, defaultLoggerThreshold);
     }
 
     @NonNull
     @Override
     public Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace) {
-        return new AndroidLogger(namespace, defaultLoggerThreshold);
+        return new TimberLogger(namespace, defaultLoggerThreshold);
     }
 
     @Override
