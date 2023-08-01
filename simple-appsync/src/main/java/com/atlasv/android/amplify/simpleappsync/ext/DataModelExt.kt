@@ -5,12 +5,21 @@ import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import java.lang.reflect.Method
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 
 /**
  * weiping@atlasv.com
  * 2022/12/22
  */
+
+const val MODEL_METHOD_GET_SORT = "getSort"
+
+fun <T : Model> Class<T>.hasSortField(): Boolean {
+    return kotlin.runCatching {
+        methods.any { it.name == MODEL_METHOD_GET_SORT }
+    }.getOrElse { false }
+}
+
 fun Model.resolveMethod(methodName: String): String? {
     return try {
         if (!this.javaClass.methods.any { it.name == methodName }) {

@@ -10,6 +10,9 @@ import com.amplifyframework.datastore.storage.sqlite.CursorValueStringFactory
 import com.amplifyframework.datastore.storage.sqlite.SQLCommandFactoryFactory
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
 import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent.Companion.LOG
+import com.atlasv.android.amplify.simpleappsync.ext.MODEL_METHOD_GET_SORT
+import com.atlasv.android.amplify.simpleappsync.ext.hasSortField
+import com.atlasv.android.amplify.simpleappsync.ext.resolveMethod
 import java.util.concurrent.CountDownLatch
 
 /**
@@ -35,8 +38,16 @@ class AmplifySqliteStorage(
         return use {
             it.sqlQueryProcessor?.queryOfflineData(itemClass, options) { cause ->
                 LOG.error("query ${itemClass.simpleName} error", cause)
-            }.also { result ->
-                LOG.info("query ${itemClass.simpleName} count: ${result?.size}")
+            }?.let { result ->
+                val hasSortField = itemClass.hasSortField()
+                LOG.info("query ${itemClass.simpleName} count: ${result.size}, hasSortField=$hasSortField")
+                if (hasSortField) {
+                    result.sortedBy { model ->
+                        model.resolveMethod(MODEL_METHOD_GET_SORT)?.toIntOrNull() ?: 0
+                    }
+                } else {
+                    result
+                }
             }
         }
     }
