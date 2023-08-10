@@ -9,18 +9,23 @@ import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn
  * 2023/3/25
  */
 open class CursorValueStringFactory {
-    /**
-     * [SQLiteColumn.getAliasedName]: tableName_name
-     */
-    open fun getStringFromCursor(cursor: Cursor, columnAliasedName: String): Pair<Int, String?>? {
+    open fun getStringFromCursor(
+        cursor: Cursor,
+        tableName: String,
+        columnName: String
+    ): Pair<Int, String?>? {
+        /**
+         * [SQLiteColumn.getAliasedName]: tableName_name
+         */
+        val columnAliasedName = tableName + SQLiteColumn.CUSTOM_ALIAS_DELIMITER + columnName
         val columnIndex = cursor.getColumnIndexOrThrow(columnAliasedName)
         return getStringFromCursor(cursor, columnIndex)
     }
 
-    fun getStringFromCursor(cursor: Cursor, columnIndex: Int): Pair<Int, String?>? {
+    fun getStringFromCursor(cursor: Cursor, columnIndex: Int): Pair<Int, String?> {
         // This check is necessary, because primitive values will return 0 even when null
         if (cursor.isNull(columnIndex)) {
-            return null
+            return columnIndex to null
         }
         return columnIndex to cursor.getString(columnIndex)
     }

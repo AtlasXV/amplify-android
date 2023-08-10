@@ -232,8 +232,8 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                     columnName += modelCount;
                 }
             }
-            final Pair<Integer, String> indexStringPair = cursorValueStringFactory.getStringFromCursor(cursor, columnName);
-            if(indexStringPair == null){
+            final Pair<Integer, String> indexStringPair = cursorValueStringFactory.getStringFromCursor(cursor, column.getTableName(), column.getName());
+            if(indexStringPair == null || indexStringPair.getSecond() == null){
                 return null;
             }
             int columnIndex = indexStringPair.getFirst();
