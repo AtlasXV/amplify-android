@@ -3,15 +3,17 @@ package com.amplifyframework.datastore.storage.sqlite
 import android.database.Cursor
 import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn
-import java.util.HashMap
 
 /**
  * weiping@atlasv.com
  * 2023/3/25
  */
 open class CursorValueStringFactory {
-    open fun getStringFromCursor(cursor: Cursor, column: SQLiteColumn): Pair<Int, String?>? {
-        val columnIndex = cursor.getColumnIndexOrThrow(column.aliasedName)
+    /**
+     * [SQLiteColumn.getAliasedName]: tableName_name
+     */
+    open fun getStringFromCursor(cursor: Cursor, columnAliasedName: String): Pair<Int, String?>? {
+        val columnIndex = cursor.getColumnIndexOrThrow(columnAliasedName)
         return getStringFromCursor(cursor, columnIndex)
     }
 

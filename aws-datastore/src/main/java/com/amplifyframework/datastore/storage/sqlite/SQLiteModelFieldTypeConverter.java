@@ -232,7 +232,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                     columnName += modelCount;
                 }
             }
-            final Pair<Integer, String> indexStringPair = cursorValueStringFactory.getStringFromCursor(cursor, column);
+            final Pair<Integer, String> indexStringPair = cursorValueStringFactory.getStringFromCursor(cursor, columnName);
             if(indexStringPair == null){
                 return null;
             }
