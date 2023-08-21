@@ -25,12 +25,17 @@ class AmplifySqliteStorage(
     val modelProvider: ModelProvider,
     val schemaRegistry: SchemaRegistry,
     sqlCommandFactoryFactory: SQLCommandFactoryFactory,
-    cursorValueStringFactory: CursorValueStringFactory
+    cursorValueStringFactory: CursorValueStringFactory,
+    private val buildInDbMigrate: () -> Unit,
+    private val extraVersion: Long,
+    private val onSqliteInitSuccess: () -> Unit
 ) {
     private val initializationsPending = CountDownLatch(1)
     val sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider).also {
         it.sqlCommandFactoryFactory = sqlCommandFactoryFactory
         it.cursorValueStringFactory = cursorValueStringFactory
+        it.dbVersionCheckListener =
+            AmplifyBuildInDbProvider(appContext, it, buildInDbMigrate, extraVersion, onSqliteInitSuccess)
         initSQLiteStorageAdapter(it)
     }
 
@@ -57,6 +62,7 @@ class AmplifySqliteStorage(
             appContext,
             {
                 initializationsPending.countDown()
+                sqLiteStorageAdapter.dbVersionCheckListener?.onSqliteInitializedSuccess()
                 LOG.info("initSQLiteStorageAdapter finish")
             },
             {
