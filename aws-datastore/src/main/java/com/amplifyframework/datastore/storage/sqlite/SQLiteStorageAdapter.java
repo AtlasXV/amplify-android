@@ -19,6 +19,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
@@ -53,6 +54,7 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
+import com.amplifyframework.datastore.storage.sqlite.migrations.AmplifyDbVersionCheckListener;
 import com.amplifyframework.datastore.storage.sqlite.migrations.ModelMigrations;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.GsonFactory;
@@ -135,6 +137,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public SQLCommandFactoryFactory sqlCommandFactoryFactory = new SQLCommandFactoryFactory();
 
     public CursorValueStringFactory cursorValueStringFactory = new CursorValueStringFactory();
+
+    @Nullable
+    public AmplifyDbVersionCheckListener dbVersionCheckListener = null;
 
     // The helper object to iterate through associated models of a given model.
     private SQLiteModelTree sqliteModelTree;
@@ -234,6 +239,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         this.dataStoreConfiguration = dataStoreConfiguration;
         threadPool.submit(() -> {
             try {
+                if (dbVersionCheckListener != null) {
+                    dbVersionCheckListener.onSqliteInitializeStarted();
+                }
                 /*
                  * Start with a fresh registry.
                  */
@@ -293,6 +301,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 sqlQueryProcessor.cursorValueStringFactory = cursorValueStringFactory;
                 syncStatus = new SyncStatus(sqlQueryProcessor, dataStoreConfiguration);
 
+                if (dbVersionCheckListener != null) {
+                    dbVersionCheckListener.onStartCheckAmplifyDbVersion(modelsProvider);
+                }
                 /*
                  * Detect if the version of the models stored in SQLite is different
                  * from the version passed in through {@link ModelProvider#version()}.
@@ -839,13 +850,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private Completable updateModels() {
         return PersistentModelVersion.fromLocalStorage(this).flatMap(iterator -> {
             if (iterator.hasNext()) {
-                LOG.verbose("Successfully read model version from local storage. " +
-                    "Checking if the model version need to be updated...");
                 PersistentModelVersion persistentModelVersion = iterator.next();
                 String oldVersion = persistentModelVersion.getVersion();
                 String newVersion = modelsProvider.version();
+                LOG.info("Successfully read model version from local storage: " +
+                        "oldVersion=" + oldVersion + ", newVersion=" + newVersion + ". " +
+                        "Checking if the model version need to be updated...");
                 if (!ObjectsCompat.equals(oldVersion, newVersion)) {
-                    LOG.debug("Updating version as it has changed from " + oldVersion + " to " + newVersion);
+                    LOG.info("Updating version as it has changed from " + oldVersion + " to " + newVersion);
                     Objects.requireNonNull(sqliteStorageHelper);
                     Objects.requireNonNull(databaseConnectionHandle);
                     sqliteStorageHelper.update(databaseConnectionHandle, oldVersion, newVersion);

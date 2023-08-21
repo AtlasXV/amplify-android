@@ -20,6 +20,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.BuildConfig;
 import com.amplifyframework.core.category.CategoryType;
 
@@ -57,19 +58,19 @@ public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     @SuppressWarnings("deprecation")
     public Logger forNamespace(@Nullable String namespace) {
         String usedNamespace = namespace == null ? AMPLIFY_NAMESPACE : namespace;
-        return new TimberLogger(usedNamespace, defaultLoggerThreshold);
+        return Amplify.loggerFactory.create(usedNamespace, defaultLoggerThreshold);
     }
 
     @NonNull
     @Override
     public Logger logger(@NonNull String namespace) {
-        return new TimberLogger(namespace, defaultLoggerThreshold);
+        return Amplify.loggerFactory.create(namespace, defaultLoggerThreshold);
     }
 
     @NonNull
     @Override
     public Logger logger(@NonNull CategoryType categoryType, @NonNull String namespace) {
-        return new TimberLogger(namespace, defaultLoggerThreshold);
+        return Amplify.loggerFactory.create(namespace, defaultLoggerThreshold);
     }
 
     @Override

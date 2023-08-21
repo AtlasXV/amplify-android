@@ -29,7 +29,10 @@ class AmplifySimpleSyncComponent(
     val schemaRegistry: SchemaRegistry,
     private val mergeListFactory: MergeRequestFactory,
     sqlCommandFactoryFactory: SQLCommandFactoryFactory,
-    cursorValueStringFactory: CursorValueStringFactory
+    cursorValueStringFactory: CursorValueStringFactory,
+    private val buildInDbMigrate: () -> Unit,
+    private val extraVersion: Long, // 支持不更改modelVersion也能重新使用内置数据库
+    private val onSqliteInitSuccess: () -> Unit
 ) {
 
     private val mutex = Mutex()
@@ -40,7 +43,10 @@ class AmplifySimpleSyncComponent(
             modelProvider,
             schemaRegistry,
             sqlCommandFactoryFactory,
-            cursorValueStringFactory
+            cursorValueStringFactory,
+            buildInDbMigrate,
+            extraVersion,
+            onSqliteInitSuccess
         )
     }
 
@@ -98,6 +104,8 @@ class AmplifySimpleSyncComponent(
     }
 
     companion object {
-        val LOG = Amplify.Logging.forNamespace("amplify:simple-sync")
+        val LOG by lazy {
+            Amplify.Logging.forNamespace("amplify:simple-sync")
+        }
     }
 }

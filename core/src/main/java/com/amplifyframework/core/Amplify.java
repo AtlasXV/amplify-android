@@ -30,6 +30,7 @@ import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.devmenu.DeveloperMenu;
 import com.amplifyframework.geo.GeoCategory;
 import com.amplifyframework.hub.HubCategory;
+import com.amplifyframework.logging.AmplifyLoggerFactory;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.notifications.NotificationsCategory;
 import com.amplifyframework.predictions.PredictionsCategory;
@@ -79,6 +80,7 @@ public final class Amplify {
     @SuppressWarnings("checkstyle:all") public static final DataStoreCategory DataStore = new DataStoreCategory();
     @SuppressWarnings("checkstyle:all") public static final PredictionsCategory Predictions = new PredictionsCategory();
     @SuppressWarnings("checkstyle:all") public static final NotificationsCategory Notifications = new NotificationsCategory();
+    public static AmplifyLoggerFactory loggerFactory = new AmplifyLoggerFactory();
 
     private static final LinkedHashMap<CategoryType, Category<? extends Plugin<?>>> CATEGORIES = buildCategoriesMap();
 
