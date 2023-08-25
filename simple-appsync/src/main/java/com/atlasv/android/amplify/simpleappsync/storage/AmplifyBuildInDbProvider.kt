@@ -33,9 +33,11 @@ class AmplifyBuildInDbProvider(
     private fun updateWithInnerDb() {
         if (updatedWithInnerDb) {
             LOG.debug("Already updateWithInnerDb, return")
+            return
         }
         buildInDbMigrate()
         updatedWithInnerDb = true
+        LOG.debug("updateWithInnerDb finish")
     }
 
     override fun onStartCheckAmplifyDbVersion(modelsProvider: ModelProvider) {
