@@ -5,15 +5,12 @@ import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelProvider
 import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.core.model.query.QueryOptions
-import com.amplifyframework.core.model.query.predicate.QueryPredicate
-import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation
 import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.storage.sqlite.CursorValueStringFactory
 import com.amplifyframework.datastore.storage.sqlite.SQLCommandFactoryFactory
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
 import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent.Companion.LOG
 import com.atlasv.android.amplify.simpleappsync.ext.MODEL_METHOD_GET_SORT
-import com.atlasv.android.amplify.simpleappsync.ext.hasOnlineField
 import com.atlasv.android.amplify.simpleappsync.ext.hasSortField
 import com.atlasv.android.amplify.simpleappsync.ext.resolveMethod
 import java.util.concurrent.CountDownLatch
