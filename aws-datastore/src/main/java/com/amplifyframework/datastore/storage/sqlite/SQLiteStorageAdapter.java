@@ -240,7 +240,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         threadPool.submit(() -> {
             try {
                 if (dbVersionCheckListener != null) {
-                    dbVersionCheckListener.onSqliteInitializeStarted();
+                    dbVersionCheckListener.onSqliteInitializeStarted(modelsProvider);
                 }
                 /*
                  * Start with a fresh registry.
@@ -301,9 +301,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 sqlQueryProcessor.cursorValueStringFactory = cursorValueStringFactory;
                 syncStatus = new SyncStatus(sqlQueryProcessor, dataStoreConfiguration);
 
-                if (dbVersionCheckListener != null) {
-                    dbVersionCheckListener.onStartCheckAmplifyDbVersion(modelsProvider);
-                }
                 /*
                  * Detect if the version of the models stored in SQLite is different
                  * from the version passed in through {@link ModelProvider#version()}.

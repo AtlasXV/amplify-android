@@ -35,7 +35,7 @@ class AmplifySqliteStorage(
         it.sqlCommandFactoryFactory = sqlCommandFactoryFactory
         it.cursorValueStringFactory = cursorValueStringFactory
         it.dbVersionCheckListener =
-            AmplifyBuildInDbProvider(appContext, it, buildInDbMigrate, extraVersion, onSqliteInitSuccess)
+            AmplifyBuildInDbProvider(appContext, buildInDbMigrate, extraVersion, onSqliteInitSuccess)
         initSQLiteStorageAdapter(it)
     }
 
