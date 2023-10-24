@@ -1,14 +1,21 @@
 package com.atlasv.android.amplify.simpleappsync
 
 import android.content.Context
+import com.amplifyframework.api.aws.AppSyncGraphQLRequest
+import com.amplifyframework.api.graphql.GraphQLRequest
+import com.amplifyframework.api.graphql.GraphQLResponse
+import com.amplifyframework.api.graphql.PaginatedResult
+import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelProvider
 import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.datastore.DataStoreConfiguration
+import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.datastore.storage.sqlite.CursorValueStringFactory
 import com.amplifyframework.datastore.storage.sqlite.SQLCommandFactoryFactory
 import com.amplifyframework.kotlin.core.Amplify
 import com.atlasv.android.amplify.simpleappsync.ext.AmplifyExtSettings
 import com.atlasv.android.amplify.simpleappsync.ext.simpleFormat
+import com.atlasv.android.amplify.simpleappsync.request.DefaultMergeRequestFactory
 import com.atlasv.android.amplify.simpleappsync.request.MergeRequestFactory
 import com.atlasv.android.amplify.simpleappsync.response.AmplifyModelMerger
 import com.atlasv.android.amplify.simpleappsync.response.AmplifySyncResponse
@@ -17,6 +24,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 /**
  * weiping@atlasv.com
@@ -72,9 +80,7 @@ class AmplifySimpleSyncComponent(
                 val request = mergeListFactory.create(
                     appContext, dataStoreConfiguration, modelProvider, schemaRegistry, lastSync, grayRelease
                 )
-                val responseItemGroups = Amplify.API.query(request).data.map {
-                    it.data?.items?.toList().orEmpty()
-                }
+                val responseItemGroups = queryAllData(request)
                 val newestSyncTime = if (oldDataExpired) currentTime else responseItemGroups.maxOfOrNull { list ->
                     list.maxOfOrNull {
                         it.syncMetadata.lastChangedAt?.secondsSinceEpoch ?: 0L
@@ -93,6 +99,21 @@ class AmplifySimpleSyncComponent(
                 LOG.error("syncFromRemote error", cause)
                 null
             }
+        }
+    }
+
+    private suspend fun queryAllData(request: GraphQLRequest<List<GraphQLResponse<PaginatedResult<ModelWithMetadata<Model>>>>>): List<List<ModelWithMetadata<Model>>> {
+        val response = Amplify.API.query(request).data
+        val responseItemGroups = response.map {
+            it.data?.items?.toList().orEmpty()
+        }
+        val remainRequests = response.mapNotNull {
+            it.data.requestForNextResult as? AppSyncGraphQLRequest<*>
+        }
+        return if (remainRequests.isEmpty()) {
+            responseItemGroups
+        } else {
+            responseItemGroups + queryAllData(DefaultMergeRequestFactory.merge(remainRequests))
         }
     }
 

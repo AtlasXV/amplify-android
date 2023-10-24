@@ -9,7 +9,7 @@ import java.lang.reflect.Type
  * 2022/12/5
  */
 class MergeListRequest<R>(
-    val children: List<AppSyncGraphQLRequest<Any>>,
+    val children: List<AppSyncGraphQLRequest<*>>,
     document: String?,
     variables: MutableMap<String, Any>?,
     responseType: Type?,
