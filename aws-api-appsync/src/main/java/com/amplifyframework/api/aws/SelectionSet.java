@@ -327,7 +327,7 @@ public final class SelectionSet {
                         // from parent information.
                         continue;
                     } else if (List.class.isAssignableFrom(field.getType())) {
-                        if (depth >= 1) {
+                        if (depth >= 1 && !LeafSerializationBehavior.NONE.equals(requestOptions.leafSerializationBehavior())) {
                             ParameterizedType listType = (ParameterizedType) field.getGenericType();
                             Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
                             Set<SelectionSet> fields = wrapPagination(
