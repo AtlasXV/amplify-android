@@ -59,6 +59,7 @@ public final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory
         this.gson = gson;
     }
 
+    @Override
     public <T> GraphQLResponse<T> buildResponse(
             @NonNull GraphQLRequest<T> request,
             @Nullable String responseJson,

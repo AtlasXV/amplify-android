@@ -240,5 +240,8 @@ public final class GraphQLResponse<R> {
          */
         <R> GraphQLResponse<R> buildResponse(GraphQLRequest<R> request, String apiResponseJson)
             throws ApiException;
+
+        <R> GraphQLResponse<R> buildResponse(GraphQLRequest<R> request, String apiResponseJson, @Nullable String apiName)
+                throws ApiException;
     }
 }

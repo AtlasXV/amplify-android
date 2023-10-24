@@ -46,7 +46,7 @@ abstract class AWSGraphQLOperation<R>(
     @Throws(ApiException::class)
     private fun buildResponse(jsonResponse: String): GraphQLResponse<R> {
         return try {
-            (responseFactory as? GsonGraphQLResponseFactory)?.buildResponse(request, jsonResponse, apiName)
+            responseFactory?.buildResponse(request, jsonResponse, apiName)
                 ?: throw ApiException(
                     "Amplify encountered an error while deserializing an object. " +
                         "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",

@@ -16,14 +16,25 @@ class MergeResponseFactory : GraphQLResponse.Factory {
         GsonGraphQLResponseFactory()
     }
 
-    override fun <R : Any?> buildResponse(request: GraphQLRequest<R>?, apiResponseJson: String?): GraphQLResponse<R> {
+    override fun <R : Any?> buildResponse(
+        request: GraphQLRequest<R>?,
+        apiResponseJson: String?,
+    ): GraphQLResponse<R> {
+        return buildResponse(request, apiResponseJson, null)
+    }
+
+    override fun <R : Any?> buildResponse(
+        request: GraphQLRequest<R>?,
+        apiResponseJson: String?,
+        apiName: String?
+    ): GraphQLResponse<R> {
         try {
             if (request == null) {
                 return GraphQLResponse(emptyList<Any>() as R, emptyList())
             }
 
             if (request !is MergeListRequest) {
-                return gqlResponseFactory.buildResponse(request, apiResponseJson, null)
+                return gqlResponseFactory.buildResponse(request, apiResponseJson, apiName)
             }
 
             apiResponseJson ?: error("Empty apiResponseJson")
@@ -40,7 +51,7 @@ class MergeResponseFactory : GraphQLResponse.Factory {
                     put(k, modelObj)
                 })
                 val childRequest = request.children.find { k == "list${it.queryModelName}" } ?: continue
-                result.add(gqlResponseFactory.buildResponse(childRequest, singleObj.toString(), null))
+                result.add(gqlResponseFactory.buildResponse(childRequest, singleObj.toString(), apiName))
             }
             checkErrors(resObj)
             LOG.info("Build merge response finish")
