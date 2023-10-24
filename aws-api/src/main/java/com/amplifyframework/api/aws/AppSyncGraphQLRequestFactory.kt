@@ -342,13 +342,14 @@ object AppSyncGraphQLRequestFactory {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      </T></R> */
-    private fun <R, T : Model, P : ModelPath<T>> buildListQueryInternal(
+    fun <R, T : Model, P : ModelPath<T>> buildListQueryInternal(
         modelClass: Class<T>,
         predicate: QueryPredicate,
         limit: Int,
         responseType: Type,
         includes: ((P) -> List<PropertyContainerPath>)?,
-        pageToken: String? = null
+        pageToken: String? = null,
+        requestOptions: GraphQLRequestOptions = ApiGraphQLRequestOptions()
     ): GraphQLRequest<R> {
         return try {
             val modelName = ModelSchema.fromModelClass(
@@ -357,7 +358,7 @@ object AppSyncGraphQLRequestFactory {
             val builder = AppSyncGraphQLRequest.builder()
                 .modelClass(modelClass)
                 .operation(QueryType.LIST)
-                .requestOptions(ApiGraphQLRequestOptions())
+                .requestOptions(requestOptions)
                 .responseType(responseType)
             if (QueryPredicates.all() != predicate) {
                 val filterType = "Model" + Casing.capitalizeFirst(modelName) + "FilterInput"

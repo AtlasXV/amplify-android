@@ -81,14 +81,16 @@ class DefaultMergeRequestFactory(
         grayRelease: Int
     ): GraphQLRequest<PaginatedResult<ModelWithMetadata<T>>> {
         val pageLimit = ModelPagination.limit(Int.MAX_VALUE)
-        return AppSyncGraphQLRequestFactory.buildQuery(
-            modelClass,
-            predicateFactory.create(modelClass, dataStoreConfiguration, lastSync, grayRelease),
-            pageLimit.limit,
-            TypeMaker.getParameterizedType(
+        return AppSyncGraphQLRequestFactory.buildListQueryInternal(
+            modelClass = modelClass,
+            predicate = predicateFactory.create(modelClass, dataStoreConfiguration, lastSync, grayRelease),
+            limit = pageLimit.limit,
+            responseType = TypeMaker.getParameterizedType(
                 PaginatedResult::class.java, ModelWithMetadata::class.java, modelClass
             ),
-            graphQLRequestOptionsFactory.create(modelClass)
+            includes = null,
+            pageToken = null,
+            requestOptions = graphQLRequestOptionsFactory.create(modelClass)
         )
     }
 

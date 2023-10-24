@@ -11,8 +11,8 @@ dependencies {
     api(project(":aws-auth-cognito"))
     api(project(":aws-api-appsync"))
     api(project(":aws-datastore"))
-    implementation(dependency.okhttp)
-    testImplementation(testDependency.junit)
-    androidTestImplementation(testDependency.androidx.test.junit)
+    implementation(libs.okhttp)
+    testImplementation(libs.test.junit)
+    androidTestImplementation(libs.test.androidx.junit)
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 }

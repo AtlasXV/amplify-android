@@ -22,10 +22,16 @@ object ModelQueryExt {
         pageLimit: Int = ModelPagination.DEFAULT_LIMIT,
     ): GraphQLRequest<PaginatedResult<ModelWithMetadata<M>>> {
         val modelType = M::class.java
-        return AppSyncGraphQLRequestFactory.buildQuery(
-            modelType, predicate, pageLimit, TypeMaker.getParameterizedType(
+        return AppSyncGraphQLRequestFactory.buildListQueryInternal(
+            modelClass = modelType,
+            predicate = predicate,
+            limit = pageLimit,
+            responseType = TypeMaker.getParameterizedType(
                 PaginatedResult::class.java, ModelWithMetadata::class.java, modelType
-            ), options
+            ),
+            includes = null,
+            pageToken = null,
+            requestOptions = options
         )
     }
 

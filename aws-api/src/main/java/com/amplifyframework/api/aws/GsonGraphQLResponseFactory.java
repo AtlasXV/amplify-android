@@ -50,7 +50,7 @@ public final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory
 
     private final AWSApiSchemaRegistry schemaRegistry = new AWSApiSchemaRegistry();
 
-    GsonGraphQLResponseFactory() {
+    public GsonGraphQLResponseFactory() {
         this(GsonFactory.instance());
     }
 
