@@ -22,9 +22,8 @@ import com.atlasv.android.amplify.simpleappsync.response.AmplifySyncResponse
 import com.atlasv.android.amplify.simpleappsync.storage.AmplifySqliteStorage
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.util.*
+import java.util.Date
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
 
 /**
  * weiping@atlasv.com

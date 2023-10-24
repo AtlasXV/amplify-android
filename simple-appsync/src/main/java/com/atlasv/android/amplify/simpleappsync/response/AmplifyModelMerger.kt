@@ -15,7 +15,7 @@ class AmplifyModelMerger(
     private val sqliteStorage: AmplifySqliteStorage
 ) {
 
-    fun mergeResponse(responseItemGroups: List<List<ModelWithMetadata<Model>>>) {
+    fun <T : Model> mergeResponse(responseItemGroups: List<List<ModelWithMetadata<T>>>) {
         sqliteStorage.use { adapter ->
             for (group in responseItemGroups) {
                 mergeAll(adapter, group)
