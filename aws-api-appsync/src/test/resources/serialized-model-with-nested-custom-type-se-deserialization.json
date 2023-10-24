@@ -2,6 +2,69 @@
   "serializedData": {
     "contact": {
       "serializedData": {
+        "additionalPhoneNumbers": [
+          {
+            "serializedData": {
+              "number": "41555555555",
+              "countryCode": "+1"
+            },
+            "customTypeSchema": {
+              "pluralName": "Phones",
+              "name": "Phone",
+              "fields": {
+                "number": {
+                  "javaClassForValue": "java.lang.String",
+                  "isRequired": true,
+                  "isCustomType": false,
+                  "name": "number",
+                  "isEnum": false,
+                  "targetType": "String",
+                  "isArray": false
+                },
+                "countryCode": {
+                  "javaClassForValue": "java.lang.String",
+                  "isRequired": true,
+                  "isCustomType": false,
+                  "name": "countryCode",
+                  "isEnum": false,
+                  "targetType": "String",
+                  "isArray": false
+                }
+              }
+            }
+          },
+          {
+            "serializedData": {
+              "number": "41555555555",
+              "countryCode": "+1"
+            },
+            "customTypeSchema": {
+              "pluralName": "Phones",
+              "name": "Phone",
+              "fields": {
+                "number": {
+                  "javaClassForValue": "java.lang.String",
+                  "isRequired": true,
+                  "isCustomType": false,
+                  "name": "number",
+                  "isEnum": false,
+                  "targetType": "String",
+                  "isArray": false
+                },
+                "countryCode": {
+                  "javaClassForValue": "java.lang.String",
+                  "isRequired": true,
+                  "isCustomType": false,
+                  "name": "countryCode",
+                  "isEnum": false,
+                  "targetType": "String",
+                  "isArray": false
+                }
+              }
+            }
+          }
+        ],
+        "aliases": null,
         "phone": {
           "serializedData": {
             "number": "41555555555",
@@ -38,6 +101,24 @@
         "pluralName": "Contacts",
         "name": "Contact",
         "fields": {
+          "additionalPhoneNumbers": {
+            "javaClassForValue": "java.util.Map",
+            "isRequired": true,
+            "isCustomType": true,
+            "name": "additionalPhoneNumbers",
+            "isEnum": false,
+            "targetType": "Phone",
+            "isArray": true
+          },
+          "aliases": {
+            "javaClassForValue": "java.util.Map",
+            "isRequired": false,
+            "isCustomType": true,
+            "name": "aliases",
+            "isEnum": false,
+            "targetType": "Contact",
+            "isArray": true
+          },
           "phone": {
             "javaClassForValue": "java.util.Map",
             "isRequired": true,
@@ -59,24 +140,44 @@
         }
       }
     },
+    "additionalContacts": null,
     "fullName": "Tester Test",
     "id": "some-unique-id"
   },
   "id": "some-unique-id",
   "modelSchema": {
     "associations": {},
+    "listPluralName": null,
     "pluralName": "People",
     "authRules": [],
     "indexes": {},
+    "modelClass": null,
     "name": "Person",
     "modelSchemaVersion": 0,
+    "modelType": null,
     "fields": {
+      "additionalContacts": {
+        "javaClassForValue": "java.util.Map",
+        "isRequired": false,
+        "isCustomType": true,
+        "isReadOnly": false,
+        "isModel": false,
+        "isModelReference": false,
+        "isModelList": false,
+        "authRules": [],
+        "name": "additionalContacts",
+        "isEnum": false,
+        "targetType": "Contact",
+        "isArray": true
+      },
       "contact": {
         "javaClassForValue": "java.util.Map",
         "isRequired": true,
         "isCustomType": true,
         "isReadOnly": false,
         "isModel": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": [],
         "name": "contact",
         "isEnum": false,
@@ -89,6 +190,8 @@
         "isCustomType": false,
         "isReadOnly": false,
         "isModel": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": [],
         "name": "fullName",
         "isEnum": false,
@@ -101,12 +204,15 @@
         "isCustomType": false,
         "isReadOnly": false,
         "isModel": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": [],
         "name": "id",
         "isEnum": false,
         "targetType": "ID",
         "isArray": false
       }
-    }
+    },
+    "syncPluralName": null
   }
 }

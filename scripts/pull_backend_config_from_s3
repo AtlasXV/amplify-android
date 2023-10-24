@@ -21,6 +21,7 @@ readonly config_files=(
     "aws-api/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-api/src/androidTest/res/raw/awsconfiguration.json"
     "aws-api/src/androidTest/res/raw/credentials.json"
+    "aws-api/src/androidTest/res/raw/amplifyconfigurationlazy.json"
 
     # DataStore
     "aws-datastore/src/androidTest/res/raw/amplifyconfiguration.json"
@@ -53,6 +54,7 @@ readonly config_files=(
 
     # Auth
     "aws-auth-cognito/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-auth-cognito/src/androidTest/res/raw/amplifyconfiguration_totp.json"
     "aws-auth-cognito/src/androidTest/res/raw/awsconfiguration.json"
     "aws-auth-cognito/src/androidTest/res/raw/credentials.json"
 )

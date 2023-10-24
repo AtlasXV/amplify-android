@@ -23,31 +23,49 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+
+    defaultConfig {
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    testOptions {
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
+    }
+}
+
 dependencies {
     api(project(":core"))
     api(project(":aws-core"))
     implementation(project(":aws-api-appsync"))
 
-    implementation(dependency.androidx.appcompat)
-    implementation(dependency.aws.signing)
-    implementation(dependency.gson)
-    implementation(dependency.okhttp)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.aws.signing)
+    implementation(libs.gson)
+    implementation(libs.okhttp)
 
     testImplementation(project(":testutils"))
     testImplementation(project(":testmodels"))
-    testImplementation(testDependency.androidx.test.core)
-    testImplementation(testDependency.jsonassert)
-    testImplementation(testDependency.junit)
-    testImplementation(testDependency.mockito)
-    testImplementation(testDependency.mockwebserver)
-    testImplementation(dependency.rxjava)
-    testImplementation(testDependency.robolectric)
+    testImplementation(libs.test.androidx.core)
+    testImplementation(libs.test.jsonassert)
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.mockito.core)
+    testImplementation(libs.test.mockk)
+    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.test.mockwebserver)
+    testImplementation(libs.rxjava)
+    testImplementation(libs.test.robolectric)
+    testImplementation(libs.test.kotlin.coroutines)
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":testmodels"))
-    androidTestImplementation(testDependency.androidx.test.core)
+    androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(project(":aws-auth-cognito"))
-    androidTestImplementation(testDependency.androidx.test.runner)
-    androidTestImplementation(testDependency.androidx.test.junit)
-    androidTestImplementation(dependency.rxjava)
+    androidTestImplementation(project(":core-kotlin"))
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.rxjava)
+    androidTestImplementation(libs.test.kotlin.coroutines)
+
+    androidTestUtil(libs.test.androidx.orchestrator)
 }

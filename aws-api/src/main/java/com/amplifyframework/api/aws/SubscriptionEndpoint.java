@@ -73,14 +73,17 @@ final class SubscriptionEndpoint {
     private final TimeoutWatchdog timeoutWatchdog;
     private final Set<String> pendingSubscriptionIds;
     private final OkHttpClient okHttpClient;
+    private final Object webSocketLock = new Object();
     private WebSocket webSocket;
     private AmplifyWebSocketListener webSocketListener;
+    private String apiName;
 
     SubscriptionEndpoint(
             @NonNull ApiConfiguration apiConfiguration,
             @Nullable OkHttpConfigurator configurator,
             @NonNull GraphQLResponse.Factory responseFactory,
-            @NonNull SubscriptionAuthorizer authorizer
+            @NonNull SubscriptionAuthorizer authorizer,
+            @Nullable String apiName
     ) {
         this.apiConfiguration = Objects.requireNonNull(apiConfiguration);
         this.subscriptions = new ConcurrentHashMap<>();
@@ -88,6 +91,7 @@ final class SubscriptionEndpoint {
         this.authorizer = Objects.requireNonNull(authorizer);
         this.timeoutWatchdog = new TimeoutWatchdog();
         this.pendingSubscriptionIds = Collections.synchronizedSet(new HashSet<>());
+        this.apiName = apiName;
 
         OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
                 .retryOnConnectionFailure(true);
@@ -126,26 +130,35 @@ final class SubscriptionEndpoint {
         Objects.requireNonNull(onSubscriptionError);
         Objects.requireNonNull(onSubscriptionComplete);
 
-        // The first call to subscribe OR a disconnected websocket listener will
-        // force a new connection to be created.
-        if (webSocketListener == null || webSocketListener.isDisconnectedState()) {
-            webSocketListener = new AmplifyWebSocketListener();
-            try {
-                webSocket = okHttpClient.newWebSocket(new Request.Builder()
-                    .url(buildConnectionRequestUrl(authType))
-                    .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
-                    .header("User-Agent", UserAgent.string())
-                    .build(), webSocketListener);
-            } catch (ApiException apiException) {
-                onSubscriptionError.accept(apiException);
-                return;
+        final String subscriptionId = UUID.randomUUID().toString();
+        final AmplifyWebSocketListener socketListener;
+        final WebSocket socket;
+
+        synchronized (webSocketLock) {
+            // The first call to subscribe OR a disconnected websocket listener will
+            // force a new connection to be created.
+            if (webSocketListener == null || webSocketListener.isDisconnectedState()) {
+                webSocketListener = new AmplifyWebSocketListener();
+                try {
+                    webSocket = okHttpClient.newWebSocket(new Request.Builder()
+                                                              .url(buildConnectionRequestUrl(authType))
+                                                              .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
+                                                              .header("User-Agent", UserAgent.string())
+                                                              .build(), webSocketListener);
+                } catch (ApiException apiException) {
+                    onSubscriptionError.accept(apiException);
+                    return;
+                }
+
             }
 
+            pendingSubscriptionIds.add(subscriptionId);
+            socketListener = webSocketListener;
+            socket = webSocket;
         }
-        final String subscriptionId = UUID.randomUUID().toString();
-        pendingSubscriptionIds.add(subscriptionId);
+
         // Every request waits here for the connection to be ready.
-        Connection connection = webSocketListener.waitForConnectionReady();
+        Connection connection = socketListener.waitForConnectionReady();
         if (connection.hasFailure()) {
             // If the latch didn't count all the way down
             if (pendingSubscriptionIds.remove(subscriptionId)) {
@@ -166,7 +179,7 @@ final class SubscriptionEndpoint {
                 .put("authorization", authorizer.createHeadersForSubscription(request, authType))))
                 .toString();
 
-            webSocket.send(jsonMessage);
+            socket.send(jsonMessage);
         } catch (JSONException | ApiException exception) {
             // If the subscriptionId was still pending, then we can call the onSubscriptionError
             if (pendingSubscriptionIds.remove(subscriptionId)) {
@@ -187,7 +200,7 @@ final class SubscriptionEndpoint {
 
         Subscription<T> subscription = new Subscription<>(
             onNextItem, onSubscriptionError, onSubscriptionComplete,
-            responseFactory, request.getResponseType(), request
+            responseFactory, request.getResponseType(), request, apiName
         );
         subscriptions.put(subscriptionId, subscription);
         if (subscription.awaitSubscriptionReady()) {
@@ -273,8 +286,8 @@ final class SubscriptionEndpoint {
 
         // Only do this if the subscription was NOT pending.
         // Otherwise it would probably fail since it was never established in the first place.
-
-        if (!wasSubscriptionPending && !webSocketListener.isDisconnectedState()) {
+        final AmplifyWebSocketListener socketListener = webSocketListener;
+        if (!wasSubscriptionPending && socketListener != null && !socketListener.isDisconnectedState()) {
             try {
                 String jsonMessage = new JSONObject()
                     .put("type", "stop")
@@ -292,13 +305,15 @@ final class SubscriptionEndpoint {
             subscription.awaitSubscriptionCompleted();
         }
 
-        subscriptions.remove(subscriptionId);
-
         // If we have zero subscriptions, close the WebSocket
-        if (subscriptions.size() == 0) {
-            LOG.info("No more active subscriptions. Closing web socket.");
-            timeoutWatchdog.stop();
-            webSocket.close(NORMAL_CLOSURE_STATUS, "No active subscriptions");
+        synchronized (webSocketLock) {
+            subscriptions.remove(subscriptionId);
+            if (subscriptions.isEmpty() && pendingSubscriptionIds.isEmpty()) {
+                LOG.info("No more active subscriptions. Closing web socket.");
+                timeoutWatchdog.stop();
+                webSocket.close(NORMAL_CLOSURE_STATUS, "No active subscriptions");
+                webSocketListener = null;
+            }
         }
     }
 
@@ -360,6 +375,7 @@ final class SubscriptionEndpoint {
         private final CountDownLatch subscriptionReadyAcknowledgment;
         private final CountDownLatch subscriptionCompletionAcknowledgement;
         private boolean failed;
+        private String apiName;
 
         Subscription(
                 Consumer<GraphQLResponse<T>> onNextItem,
@@ -367,13 +383,16 @@ final class SubscriptionEndpoint {
                 Action onSubscriptionComplete,
                 GraphQLResponse.Factory responseFactory,
                 Type responseType,
-                GraphQLRequest<T> request) {
+                GraphQLRequest<T> request,
+                String apiName
+        ) {
             this.onNextItem = onNextItem;
             this.onSubscriptionError = onSubscriptionError;
             this.onSubscriptionComplete = onSubscriptionComplete;
             this.responseFactory = responseFactory;
             this.responseType = responseType;
             this.request = request;
+            this.apiName = apiName;
             this.subscriptionReadyAcknowledgment = new CountDownLatch(1);
             this.subscriptionCompletionAcknowledgement = new CountDownLatch(1);
             this.failed = false;
@@ -432,9 +451,28 @@ final class SubscriptionEndpoint {
             }
         }
 
+        // This method should be used in place of GraphQLResponse.Factory buildResponse.
+        // We need to use this method to pass apiName for LazyModel
+        private GraphQLResponse<T> buildResponse(String jsonResponse) throws ApiException {
+            if (!(responseFactory instanceof GsonGraphQLResponseFactory)) {
+                throw new ApiException(
+                        "Amplify encountered an error while deserializing an object. " +
+                        "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",
+                        AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
+            }
+
+            try {
+                return ((GsonGraphQLResponseFactory) responseFactory)
+                        .buildResponse(request, jsonResponse, apiName);
+            } catch (ClassCastException cce) {
+                throw new ApiException("Amplify encountered an error while deserializing an object",
+                        AmplifyException.TODO_RECOVERY_SUGGESTION);
+            }
+        }
+
         void dispatchNextMessage(String message) {
             try {
-                onNextItem.accept(responseFactory.buildResponse(request, message));
+                onNextItem.accept(buildResponse(message));
             } catch (ApiException exception) {
                 dispatchError(exception);
             }

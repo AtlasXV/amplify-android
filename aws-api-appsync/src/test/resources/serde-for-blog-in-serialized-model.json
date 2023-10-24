@@ -16,6 +16,8 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       },
       "name": {
@@ -28,6 +30,8 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       },
       "owner": {
@@ -40,6 +44,8 @@
         "isArray": false,
         "isEnum": false,
         "isModel": true,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       },
       "posts": {
@@ -52,6 +58,8 @@
         "isArray": true,
         "isEnum": false,
         "isModel": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       }
     },
@@ -59,17 +67,23 @@
       "owner": {
         "name": "BelongsTo",
         "targetName": "blogOwnerId",
+        "targetNames": null,
+        "associatedName": null,
         "associatedType": "BlogOwner"
       },
       "posts": {
         "name": "HasMany",
         "associatedName": "blog",
-        "associatedType": "Post"
+        "associatedType": "Post",
+        "targetNames": null,
+        "targetName": null
       }
     },
     "indexes": {},
     "modelClass": "com.amplifyframework.core.model.SerializedModel",
-    "modelSchemaVersion": 0
+    "listPluralName": null,
+    "modelType": null,
+    "syncPluralName": null
   },
   "serializedData": {
     "owner": {

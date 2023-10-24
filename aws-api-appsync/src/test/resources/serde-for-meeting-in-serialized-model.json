@@ -2,9 +2,10 @@
   "id": "970f1b78-8786-4762-a43a-17c70f966684",
   "modelSchema": {
     "name": "Meeting",
-    "modelSchemaVersion": 0,
     "pluralName": "Meetings",
     "authRules": [],
+    "listPluralName": null,
+    "modelType": null,
     "fields": {
       "date": {
         "name": "date",
@@ -16,6 +17,8 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       },
       "dateTime": {
@@ -28,6 +31,8 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       },
       "id": {
@@ -40,6 +45,8 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       },
       "name": {
@@ -52,6 +59,8 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       },
       "time": {
@@ -64,6 +73,8 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       },
       "timestamp": {
@@ -76,9 +87,12 @@
         "isArray": false,
         "isEnum": false,
         "isModel": false,
+        "isModelReference": false,
+        "isModelList": false,
         "authRules": []
       }
     },
+    "syncPluralName": null,
     "associations": {},
     "indexes": {},
     "modelClass": "com.amplifyframework.core.model.SerializedModel",

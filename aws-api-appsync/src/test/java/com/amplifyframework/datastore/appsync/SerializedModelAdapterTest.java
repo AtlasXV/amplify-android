@@ -40,6 +40,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -63,7 +64,7 @@ public final class SerializedModelAdapterTest {
         GsonTemporalAdapters.register(builder);
         SerializedModelAdapter.register(builder);
         SerializedCustomTypeAdapter.register(builder);
-        gson = builder.create();
+        gson = builder.serializeNulls().create();
     }
 
     /**
@@ -125,7 +126,7 @@ public final class SerializedModelAdapterTest {
         String expectedJson = new JSONObject(Resources.readAsString(resourcePath)).toString(2);
         String actualJson = new JSONObject(gson.toJson(blogAsSerializedModel)).toString(2);
 
-        Assert.assertEquals(expectedJson, actualJson);
+        JSONAssert.assertEquals(expectedJson, actualJson, true);
 
         SerializedModel recovered = gson.fromJson(expectedJson, SerializedModel.class);
         Assert.assertEquals(blogAsSerializedModel, recovered);
@@ -154,9 +155,14 @@ public final class SerializedModelAdapterTest {
                 .customTypeSchema(phoneSchema)
                 .build();
 
+        List<SerializedCustomType> additionalPhoneNumbers = new ArrayList<>();
+        additionalPhoneNumbers.add(phone);
+        additionalPhoneNumbers.add(phone);
         Map<String, Object> contactSerializedData = new HashMap<>();
         contactSerializedData.put("email", "test@test.com");
         contactSerializedData.put("phone", phone);
+        contactSerializedData.put("additionalPhoneNumbers", additionalPhoneNumbers);
+        contactSerializedData.put("aliases", null);
         SerializedCustomType contact = SerializedCustomType.builder()
                 .serializedData(contactSerializedData)
                 .customTypeSchema(contactSchema)
@@ -165,6 +171,7 @@ public final class SerializedModelAdapterTest {
         Map<String, Object> personSerializedData = new HashMap<>();
         personSerializedData.put("fullName", "Tester Test");
         personSerializedData.put("contact", contact);
+        personSerializedData.put("additionalContacts", null);
         personSerializedData.put("id", "some-unique-id");
         SerializedModel person = SerializedModel.builder()
                 .modelSchema(personSchema)
@@ -175,7 +182,7 @@ public final class SerializedModelAdapterTest {
         String expectedJson = new JSONObject(Resources.readAsString(resourcePath)).toString(2);
         String actualJson = new JSONObject(gson.toJson(person)).toString(2);
 
-        Assert.assertEquals(expectedJson, actualJson);
+        JSONAssert.assertEquals(expectedJson, actualJson, true);
 
         SerializedModel recovered = gson.fromJson(expectedJson, SerializedModel.class);
         Assert.assertEquals(person, recovered);
@@ -314,6 +321,22 @@ public final class SerializedModelAdapterTest {
                 .isCustomType(true)
                 .isRequired(true)
                 .build());
+        contactFields.put("additionalPhoneNumbers", CustomTypeField.builder()
+                .name("additionalPhoneNumbers")
+                .targetType("Phone")
+                .javaClassForValue(Map.class)
+                .isCustomType(true)
+                .isArray(true)
+                .isRequired(true)
+                .build());
+        contactFields.put("aliases", CustomTypeField.builder()
+                .name("aliases")
+                .targetType("Contact")
+                .javaClassForValue(Map.class)
+                .isCustomType(true)
+                .isArray(true)
+                .isRequired(false)
+                .build());
         return CustomTypeSchema.builder()
                 .name("Contact")
                 .pluralName("Contacts")
@@ -341,6 +364,14 @@ public final class SerializedModelAdapterTest {
                 .javaClassForValue(Map.class)
                 .isRequired(true)
                 .isCustomType(true)
+                .build());
+        personFields.put("additionalContacts", ModelField.builder()
+                .name("additionalContacts")
+                .targetType("Contact")
+                .javaClassForValue(Map.class)
+                .isRequired(false)
+                .isCustomType(true)
+                .isArray(true)
                 .build());
         return ModelSchema.builder()
                 .name("Person")

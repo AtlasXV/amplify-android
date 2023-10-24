@@ -1,3 +1,77 @@
+## [Release 2.14.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.1)
+
+### Bug Fixes
+- **auth:** Fix for retry sign in when resourceNotFoundException is raised ([#2605](https://github.com/aws-amplify/amplify-android/issues/2605))
+
+[See all changes between 2.14.0 and 2.14.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.0...release_v2.14.1)
+
+## [Release 2.14.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.0)
+
+### Features
+- **api:** Lazy Loading and Custom Selection Set ([#2592](https://github.com/aws-amplify/amplify-android/issues/2592))
+
+### Bug Fixes
+- **push:** Add previously removed tests ([#2589](https://github.com/aws-amplify/amplify-android/issues/2589))
+- **auth:** fetch device metadata from credential store for `remember` and `forgetDevice` ([#2601](https://github.com/aws-amplify/amplify-android/issues/2601))
+
+[See all changes between 2.13.2 and 2.14.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.13.2...release_v2.14.0)
+
+## [Release 2.13.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.13.2)
+
+### Bug Fixes
+- **push:** Prevent Unintended OptOuts ([#2587](https://github.com/aws-amplify/amplify-android/issues/2587))
+
+[See all changes between 2.13.1 and 2.13.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.13.1...release_v2.13.2)
+
+## [Release 2.13.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.13.1)
+
+### Bug Fixes
+- **liveness:** Read facematch timeout from server event JSON ([#2577](https://github.com/aws-amplify/amplify-android/issues/2577))
+- **liveness:** API to add liveness version to websocket ([#2572](https://github.com/aws-amplify/amplify-android/issues/2572))
+
+[See all changes between 2.13.0 and 2.13.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.13.0...release_v2.13.1)
+
+## [Release 2.13.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.13.0)
+
+### Features
+- **Auth:** Add TOTP Support ([#2537](https://github.com/aws-amplify/amplify-android/issues/2537)) ([#2568](https://github.com/aws-amplify/amplify-android/issues/2568))
+
+### Miscellaneous
+- Update readme & contributing guide to add versioning ([#2544](https://github.com/aws-amplify/amplify-android/issues/2544))
+
+[See all changes between 2.12.0 and 2.13.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.12.0...release_v2.13.0)
+
+## [Release 2.12.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.12.0)
+
+### Features
+- **auth:** Removed dependency on oauth2 token for refreshToken and move to initiateAuth for hostedUI ([#2543](https://github.com/aws-amplify/amplify-android/issues/2543))
+
+### Bug Fixes
+- **auth:** Fix for missing exception type for sign in ([#2567](https://github.com/aws-amplify/amplify-android/issues/2567))
+- **datastore:** Prevent stop from interrupting subsequent start call ([#2569](https://github.com/aws-amplify/amplify-android/issues/2569))
+- **datastore:** Ignore ApiAuthExceptions when subscribing or syncing models ([#2561](https://github.com/aws-amplify/amplify-android/issues/2561))
+- add granular read ops enum ([#2265](https://github.com/aws-amplify/amplify-android/issues/2265))
+- **flutter/datastore:** Nullable custom type arrays ([#2565](https://github.com/aws-amplify/amplify-android/issues/2565))
+- **notifications:** also catch `RuntimeExecutionException` for google play store device use case ([#2562](https://github.com/aws-amplify/amplify-android/issues/2562))
+ 
+[See all changes between 2.11.3 and 2.12.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.11.3...release_v2.12.0)
+
+## [Release 2.11.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.3)
+
+### Bug Fixes
+- **storage:** Upgrade SDK to fix EOF exception ([#2558](https://github.com/aws-amplify/amplify-android/issues/2558))
+- **data:** Resolve orchestrator transition threading issues. ([#2551](https://github.com/aws-amplify/amplify-android/issues/2551))
+
+[See all changes between 2.11.2 and 2.11.3](https://github.com/aws-amplify/amplify-android/compare/release_v2.11.2...release_v2.11.3)
+
+## [Release 2.11.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.2)
+
+### Bug Fixes
+- **datastore/flutter:** Custom type list serde ([#2545](https://github.com/aws-amplify/amplify-android/issues/2545))
+- **auth:** Prevent credential continuation from returning multiple times. ([#2541](https://github.com/aws-amplify/amplify-android/issues/2541))
+
+[See all changes between 2.11.1 and 2.11.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.11.1...release_v2.11.2)
+
 ## [Release 2.11.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.11.1)
 
 ### Bug Fixes
