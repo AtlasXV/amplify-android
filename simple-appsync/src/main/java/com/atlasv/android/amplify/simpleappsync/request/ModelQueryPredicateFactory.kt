@@ -7,7 +7,7 @@ import com.amplifyframework.core.model.temporal.Temporal
 import com.amplifyframework.datastore.DataStoreConfiguration
 import com.atlasv.android.amplify.simpleappsync.ext.queryField
 import com.atlasv.android.amplify.simpleappsync.ext.then
-import java.util.*
+import java.util.Date
 
 /**
  * weiping@atlasv.com

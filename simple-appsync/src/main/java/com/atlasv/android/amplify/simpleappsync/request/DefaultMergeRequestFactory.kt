@@ -18,8 +18,14 @@ import com.amplifyframework.util.Wrap
 
 class DefaultMergeRequestFactory(
     private val predicateFactory: ModelQueryPredicateFactory,
+    private val ignoredFieldMapProvider: (() -> Map<String, Set<String>>?)? = null,
     private val graphQLRequestOptionsFactory: GraphQLRequestOptionsFactory = NoneLeafGraphQLRequestOptionsFactory()
 ) : MergeRequestFactory {
+
+    private val ignoredFieldMap by lazy {
+        ignoredFieldMapProvider?.invoke()
+    }
+
     private fun <T : Model> getModelRequest(
         modelClass: Class<T>,
         dataStoreConfiguration: DataStoreConfiguration,
@@ -36,7 +42,8 @@ class DefaultMergeRequestFactory(
             ),
             includes = null,
             pageToken = null,
-            requestOptions = graphQLRequestOptionsFactory.create(modelClass)
+            requestOptions = graphQLRequestOptionsFactory.create(modelClass),
+            ignoredFields = ignoredFieldMap?.get(modelClass.simpleName)
         )
     }
 

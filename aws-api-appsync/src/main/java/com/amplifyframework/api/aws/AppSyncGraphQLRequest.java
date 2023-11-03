@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
@@ -38,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * A request against an AppSync GraphQL endpoint.
@@ -268,6 +270,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
         private AuthorizationType authorizationType;
         final HashMap<String, Object> variables;
         private final Map<String, String> variableTypes;
+        private Set<String> ignoredFields;
 
         Builder() {
             this.variables = new HashMap<>();
@@ -302,6 +305,11 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
          */
         public Builder modelClass(@NonNull Class<? extends Model> modelClass) {
             this.modelClass = Objects.requireNonNull(modelClass);
+            return Builder.this;
+        }
+
+        public Builder ignoredFields(@Nullable Set<String> fields) {
+            this.ignoredFields = fields;
             return Builder.this;
         }
 
@@ -412,6 +420,7 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
                         .modelSchema(this.modelSchema)
                         .modelClass(this.modelClass)
                         .operation(this.operation)
+                        .ignoredFields(ignoredFields)
                         .requestOptions(Objects.requireNonNull(this.requestOptions))
                         .build();
             }

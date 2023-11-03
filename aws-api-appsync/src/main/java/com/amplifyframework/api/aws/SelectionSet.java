@@ -191,6 +191,7 @@ public final class SelectionSet {
         private GraphQLRequestOptions requestOptions;
         private ModelSchema modelSchema;
         private List<PropertyContainerPath> includeRelationships;
+        private @Nullable Set<String> ignoredFields;
 
         Builder() { }
 
@@ -207,6 +208,11 @@ public final class SelectionSet {
         public Builder modelSchema(@NonNull ModelSchema modelSchema) {
             this.modelSchema = Objects.requireNonNull(modelSchema);
             return Builder.this;
+        }
+
+        public Builder ignoredFields(@Nullable Set<String> fields) {
+           this.ignoredFields = fields;
+           return Builder.this;
         }
 
         public Builder operation(@NonNull Operation operation) {
@@ -319,6 +325,9 @@ public final class SelectionSet {
             }
 
             for (Field field : FieldFinder.findModelFieldsIn(clazz)) {
+                if (ignoredFields != null && ignoredFields.contains(field.getName())) {
+                    continue;
+                }
                 String fieldName = field.getName();
                 if (schema.getAssociations().containsKey(fieldName)) {
                     if (ModelList.class.isAssignableFrom(field.getType())) {

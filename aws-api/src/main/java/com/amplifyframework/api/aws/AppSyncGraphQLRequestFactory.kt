@@ -349,13 +349,15 @@ object AppSyncGraphQLRequestFactory {
         responseType: Type,
         includes: ((P) -> List<PropertyContainerPath>)?,
         pageToken: String? = null,
-        requestOptions: GraphQLRequestOptions = ApiGraphQLRequestOptions()
+        requestOptions: GraphQLRequestOptions = ApiGraphQLRequestOptions(),
+        ignoredFields: Set<String>? = null
     ): GraphQLRequest<R> {
         return try {
             val modelName = ModelSchema.fromModelClass(
                 modelClass
             ).name
             val builder = AppSyncGraphQLRequest.builder()
+                .ignoredFields(ignoredFields)
                 .modelClass(modelClass)
                 .operation(QueryType.LIST)
                 .requestOptions(requestOptions)
