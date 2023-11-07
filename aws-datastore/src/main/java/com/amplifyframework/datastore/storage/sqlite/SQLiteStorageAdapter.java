@@ -973,4 +973,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
         return listOfCustomType;
     }
+
+    @Nullable
+    public SQLiteDatabase getSQLiteDatabase() {
+        return databaseConnectionHandle;
+    }
 }

@@ -85,6 +85,22 @@ class AmplifySqliteStorage(
         )
     }
 
+    fun <R> useTransaction(action: (SQLiteStorageAdapter) -> R): R? {
+        return use { adapter ->
+            val database = adapter.sqLiteDatabase!!
+            try {
+                database.beginTransaction()
+                action(adapter).also {
+                    database.setTransactionSuccessful()
+                }
+            } finally {
+                if (database.inTransaction()) {
+                    database.endTransaction()
+                }
+            }
+        }
+    }
+
     fun <R> use(action: (SQLiteStorageAdapter) -> R): R? {
         return try {
             initializationsPending.await()
