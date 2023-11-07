@@ -11,14 +11,18 @@ import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent.Compa
  * 2022/12/7
  */
 fun <T : Model> SQLiteStorageAdapter.deleteList(items: List<T>) {
+    if (items.isEmpty()) {
+        return
+    }
+    val startMs = System.currentTimeMillis()
     for (item in items) {
         if (!sqlQueryProcessor.modelExists(item, QueryPredicates.all())) {
             LOG.debug(item.modelName + " model with id = " + item.primaryKeyString + " does not exist.")
             continue
         }
         writeData(item, StorageItemChange.Type.DELETE)
-        LOG.debug("Delete $item")
     }
+    LOG.info("Delete ${items.size} items from ${items[0].modelName}, take ${(System.currentTimeMillis() - startMs)}ms")
 }
 
 fun <T : Model> SQLiteStorageAdapter.saveList(items: List<T>) {
@@ -34,5 +38,5 @@ fun <T : Model> SQLiteStorageAdapter.saveList(items: List<T>) {
         }
         writeData(item, writeType)
     }
-    LOG.info("Save ${items[0].modelName} list(${items.size}), ${(System.currentTimeMillis() - startMs)}ms")
+    LOG.info("Save ${items.size} items to ${items[0].modelName}, take ${(System.currentTimeMillis() - startMs)}ms")
 }
