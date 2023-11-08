@@ -87,7 +87,11 @@ class AmplifySimpleSyncComponent(
                 }?.takeIf { it > lastSync }?.also {
                     LOG.info("newestSyncTime=$it")
                 }
-                merger.mergeResponse(responseItemGroups)
+                val succeed = merger.mergeResponse(responseItemGroups)
+                if (!succeed) {
+                    LOG.info("mergeResponse failed")
+                    return null
+                }
                 AmplifyExtSettings.saveLastSync(appContext, modelProvider.version(), newestSyncTime)
                 val newestUpdatedTime = newestSyncTime ?: lastSync
                 LOG.info(

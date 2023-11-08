@@ -16,15 +16,17 @@ class AmplifyModelMerger(
     private val sqliteStorage: AmplifySqliteStorage
 ) {
 
-    fun <T : Model> mergeResponse(responseItemGroups: List<List<ModelWithMetadata<T>>>) {
+    fun <T : Model> mergeResponse(responseItemGroups: List<List<ModelWithMetadata<T>>>): Boolean {
         LOG.info("======================== mergeResponse start ========================")
         val startMs = System.currentTimeMillis()
-        for (group in responseItemGroups) {
-            sqliteStorage.useTransaction { adapter ->
+        val succeed = sqliteStorage.useTransaction { adapter ->
+            for (group in responseItemGroups) {
                 mergeAll(adapter, group)
             }
+            true
         }
         LOG.info("============ mergeResponse take ${(System.currentTimeMillis() - startMs)}ms ============")
+        return succeed == true
     }
 
     private fun <T : Model> mergeAll(adapter: SQLiteStorageAdapter, modelWithMetadataList: List<ModelWithMetadata<T>>) {
