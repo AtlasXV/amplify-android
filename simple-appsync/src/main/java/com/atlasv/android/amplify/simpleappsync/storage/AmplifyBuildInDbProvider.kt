@@ -24,7 +24,6 @@ class AmplifyBuildInDbProvider(
             if (!dbFile.exists()) {
                 LOG.info("AmplifyDatastore.db not exists, need updateWithInnerDb.")
                 updateWithInnerDb()
-                amplifySettings.edit().putLong(KEY_EXTRA_MODEL_VERSION, extraVersion).apply()
                 return
             }
             var oldVersion = getBuildInDbVersion(dbFile)
@@ -58,6 +57,7 @@ class AmplifyBuildInDbProvider(
             return
         }
         buildInDbMigrate()
+        amplifySettings.edit().putLong(KEY_EXTRA_MODEL_VERSION, extraVersion).apply()
         updatedWithInnerDb = true
         LOG.debug("updateWithInnerDb finish")
     }
