@@ -84,7 +84,7 @@ class AmplifySimpleSyncComponent(
                     list.maxOfOrNull {
                         it.syncMetadata.lastChangedAt?.secondsSinceEpoch ?: 0L
                     } ?: 0L
-                }?.takeIf { it > lastSync }?.also {
+                }?.takeIf { it > lastSync }?.coerceAtMost(currentTime)?.also {
                     LOG.info("newestSyncTime=$it")
                 }
                 val succeed = merger.mergeResponse(responseItemGroups)
