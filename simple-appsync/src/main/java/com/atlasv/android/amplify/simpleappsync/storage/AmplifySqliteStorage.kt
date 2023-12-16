@@ -43,6 +43,17 @@ class AmplifySqliteStorage(
         return use { adapter ->
             adapter.sqlQueryProcessor?.queryOfflineData(itemClass, options) { cause ->
                 LOG.error("query ${itemClass.simpleName} error", cause)
+            }?.let { modelItems ->
+                val modelItemsDistinctById = modelItems.distinctBy { modelItem ->
+                    modelItem.resolveIdentifier()
+                }
+                /**
+                 * 如果为一个Item在同一个区域配置重复的本地化，LEFT JOIN 会产生两条id相同的Item，这种情况下先给出错误提醒，需要在数据库侧移除多余的本地化项
+                 */
+                if (modelItemsDistinctById.size != modelItems.size) {
+                    LOG.error("query ${itemClass.simpleName} has same ids: DistinctById=${modelItemsDistinctById.size}, modelItems=${modelItems.size}")
+                }
+                modelItemsDistinctById
             }?.let {
                 val result = filterModels(options, it)
                 val hasSortField = itemClass.hasSortField()
