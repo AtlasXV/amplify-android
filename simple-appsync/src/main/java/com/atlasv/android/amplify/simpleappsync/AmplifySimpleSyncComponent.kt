@@ -111,7 +111,7 @@ class AmplifySimpleSyncComponent(
             it.data?.items?.toList().orEmpty()
         }
         val remainRequests = response.mapNotNull {
-            it.data.requestForNextResult as? AppSyncGraphQLRequest<*>
+            it.data?.requestForNextResult as? AppSyncGraphQLRequest<*>
         }
         return if (remainRequests.isEmpty()) {
             responseItemGroups
