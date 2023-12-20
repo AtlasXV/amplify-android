@@ -65,7 +65,9 @@ internal object LegacyKeyProvider {
             return Result.failure(CredentialStoreError(message))
         }
 
-        val key: Key? = keyStore.getKey(keyAlias, null)
+        val key: Key? = runCatching {
+            keyStore.getKey(keyAlias, null)
+        }.getOrNull()
         return if (key != null) {
             Result.success(key)
         } else {
@@ -79,6 +81,10 @@ internal object LegacyKeyProvider {
         val keyStore = KeyStore.getInstance(ANDROID_KEY_STORE_NAME)
         keyStore.load(null)
 
-        keyStore.deleteEntry(keyAlias)
+        try {
+            keyStore.deleteEntry(keyAlias)
+        } catch (cause: Throwable) {
+            // do nothing
+        }
     }
 }
