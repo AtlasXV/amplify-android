@@ -14,6 +14,7 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.datastore.storage.sqlite.CursorValueStringFactory
 import com.amplifyframework.datastore.storage.sqlite.SQLCommandFactoryFactory
 import com.amplifyframework.kotlin.core.Amplify
+import com.atlasv.android.amplify.simpleappsync.config.AmplifySimpleSyncConfig
 import com.atlasv.android.amplify.simpleappsync.ext.AmplifyExtSettings
 import com.atlasv.android.amplify.simpleappsync.ext.simpleFormat
 import com.atlasv.android.amplify.simpleappsync.request.DefaultMergeRequestFactory
@@ -39,22 +40,25 @@ class AmplifySimpleSyncComponent(
     sqlCommandFactoryFactory: SQLCommandFactoryFactory,
     cursorValueStringFactory: CursorValueStringFactory,
     private val buildInDbMigrate: () -> Unit,
-    private val extraVersion: Long, // 支持不更改modelVersion也能重新使用内置数据库
-    private val onSqliteInitSuccess: () -> Unit
+    private val onSqliteInitSuccess: () -> Unit,
+    private val config: AmplifySimpleSyncConfig
 ) {
-
+    private val extSettings by lazy {
+        AmplifyExtSettings(appContext)
+    }
     private val mutex = Mutex()
     val storage by lazy {
         AmplifySqliteStorage(
             appContext,
             dataStoreConfiguration,
+            extSettings,
             modelProvider,
             schemaRegistry,
             sqlCommandFactoryFactory,
             cursorValueStringFactory,
             buildInDbMigrate,
-            extraVersion,
-            onSqliteInitSuccess
+            config,
+            onSqliteInitSuccess,
         )
     }
 
@@ -62,12 +66,12 @@ class AmplifySimpleSyncComponent(
         AmplifyModelMerger(storage)
     }
 
-    suspend fun syncFromRemote(
-        grayRelease: Int, dbInitTime: Long, dataExpireInterval: Long = TimeUnit.DAYS.toMillis(30)
-    ): AmplifySyncResponse? {
+    suspend fun syncFromRemote(): AmplifySyncResponse? {
         return mutex.withLock {
             try {
-                var lastSync = getLastSyncTime(dbInitTime)
+                var lastSync = extSettings.getLastSyncTimestamp()
+                val dataExpireInterval = config.dataExpireInterval
+                val grayRelease = config.grayRelease
                 val currentTime = System.currentTimeMillis()
                 val dataAge = currentTime - lastSync
                 var oldDataExpired = false
@@ -93,7 +97,7 @@ class AmplifySimpleSyncComponent(
                     LOG.info("mergeResponse failed")
                     return null
                 }
-                AmplifyExtSettings.saveLastSync(appContext, modelProvider.version(), newestSyncTime)
+                extSettings.saveLastSyncTimestamp(newestSyncTime)
                 val newestUpdatedTime = newestSyncTime ?: lastSync
                 LOG.info(
                     "syncFromRemote success, newestUpdatedTime=${Date(newestUpdatedTime).simpleFormat()}"
@@ -135,13 +139,6 @@ class AmplifySimpleSyncComponent(
         } else {
             responseItemGroups + queryAllData(DefaultMergeRequestFactory.merge(remainRequests))
         }
-    }
-
-    private suspend fun getLastSyncTime(dbInitTime: Long): Long {
-        if (modelProvider.version() != AmplifyExtSettings.getLastSyncDbVersion(appContext)) {
-            return dbInitTime
-        }
-        return maxOf(dbInitTime, AmplifyExtSettings.getLastSyncTimestamp(appContext))
     }
 
     companion object {

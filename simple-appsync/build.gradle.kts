@@ -14,5 +14,6 @@ dependencies {
     implementation(libs.okhttp)
     testImplementation(libs.test.junit)
     androidTestImplementation(libs.test.androidx.junit)
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.kotlin.coroutines)
 }

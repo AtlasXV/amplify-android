@@ -1,48 +1,43 @@
 package com.atlasv.android.amplify.simpleappsync.ext
 
 import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.longPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.firstOrNull
+import androidx.core.content.edit
+import com.atlasv.android.amplify.simpleappsync.storage.AmplifyBuildInDbProvider
 
 /**
  * weiping@atlasv.com
  * 2022/12/22
  */
 
-val Context.amplifySettingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "amplify_settings")
-
-object AmplifyExtSettings {
-    private const val KEY_SYNC_DB_VERSION = "sync_db_version"
-    private const val KEY_SYNC_TIMESTAMP = "sync_timestamp"
-
-    suspend fun getLastSyncDbVersion(context: Context): String? {
-        return context.amplifySettingsDataStore.data.firstOrNull()?.get(stringPreferencesKey(KEY_SYNC_DB_VERSION))
+class AmplifyExtSettings(private val appContext: Context) {
+    private val amplifySettings by lazy {
+        appContext.getSharedPreferences("sp_amplify_settings", Context.MODE_PRIVATE)
     }
 
-    private suspend fun saveLastSyncDbVersion(context: Context, dbVersion: String) {
-        context.amplifySettingsDataStore.edit {
-            it[stringPreferencesKey(KEY_SYNC_DB_VERSION)] = dbVersion
-        }
+    fun getLastSyncTimestamp(): Long {
+        return amplifySettings.getLong(KEY_SYNC_TIMESTAMP, 0)
     }
 
-    suspend fun getLastSyncTimestamp(context: Context): Long {
-        return context.amplifySettingsDataStore.data.firstOrNull()?.get(longPreferencesKey(KEY_SYNC_TIMESTAMP)) ?: 0
-    }
-
-    private suspend fun saveLastSyncTimestamp(context: Context, timestamp: Long?) {
+    fun saveLastSyncTimestamp(timestamp: Long?) {
         timestamp ?: return
-        context.amplifySettingsDataStore.edit {
-            it[longPreferencesKey(KEY_SYNC_TIMESTAMP)] = timestamp
+        amplifySettings.edit {
+            putLong(KEY_SYNC_TIMESTAMP, timestamp)
         }
     }
 
-    suspend fun saveLastSync(context: Context, dbVersion: String, timestamp: Long?) {
-        saveLastSyncDbVersion(context, dbVersion)
-        saveLastSyncTimestamp(context, timestamp)
+    fun getExtraModelVersion(): Long {
+        return amplifySettings.getLong(KEY_EXTRA_MODEL_VERSION, 0)
+    }
+
+
+    fun saveExtraModelVersion(extraVersion: Long) {
+        amplifySettings.edit {
+            putLong(KEY_EXTRA_MODEL_VERSION, extraVersion)
+        }
+    }
+
+    companion object {
+        private const val KEY_SYNC_TIMESTAMP = "sync_timestamp"
+        private const val KEY_EXTRA_MODEL_VERSION = "extra_model_version"
     }
 }
