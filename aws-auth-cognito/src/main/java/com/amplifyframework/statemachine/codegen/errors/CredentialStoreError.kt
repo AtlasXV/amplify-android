@@ -15,7 +15,11 @@
 
 package com.amplifyframework.statemachine.codegen.errors
 
-internal data class CredentialStoreError(
+data class CredentialStoreError(
     override val message: String,
     override val cause: Throwable? = null
 ) : Exception()
+
+fun Throwable.toCredentialStoreError(): CredentialStoreError {
+    return if (this is CredentialStoreError) this else CredentialStoreError(this.message.orEmpty(), this)
+}

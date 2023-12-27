@@ -22,6 +22,7 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
+import com.amplifyframework.statemachine.codegen.errors.toCredentialStoreError
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 
 internal object CredentialStoreCognitoActions : CredentialStoreActions {
@@ -54,8 +55,8 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
                 }
 
                 CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore(CredentialType.Amplify))
-            } catch (error: CredentialStoreError) {
-                CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
+            } catch (error: Throwable) {
+                CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error.toCredentialStoreError()))
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
@@ -90,8 +91,8 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
                     CredentialType.ASF -> credentialStore.retrieveASFDevice()
                 }
                 CredentialStoreEvent(CredentialStoreEvent.EventType.CompletedOperation(credentials))
-            } catch (error: CredentialStoreError) {
-                CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error))
+            } catch (error: Throwable) {
+                CredentialStoreEvent(CredentialStoreEvent.EventType.ThrowError(error.toCredentialStoreError()))
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
