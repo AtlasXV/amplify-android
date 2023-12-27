@@ -18,6 +18,7 @@ package com.amplifyframework.statemachine
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -73,7 +74,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     private val stateMachineScope = Job() + operationQueue // + exceptionHandler
 
     // weak wrapper ??
-    private val subscribers: MutableMap<StateChangeListenerToken, (StateType) -> Unit>
+    val subscribers: MutableMap<StateChangeListenerToken, (StateType) -> Unit>
 
     // atomic value ??
     private val pendingCancellations: MutableSet<StateChangeListenerToken>
@@ -122,6 +123,10 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
         }
     }
 
+    fun getCurrentStateSync(): StateType {
+        return currentState
+    }
+
     /**
      * Register a listener.
      * @param token token, which will be retained in the subscribers map
@@ -167,7 +172,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param newState new state to be sent
      * @return true if the subscriber was notified, false if the token was null or a cancellation was pending
      */
-    private fun notifySubscribers(
+    fun notifySubscribers(
         subscriber: Map.Entry<StateChangeListenerToken, (StateType) -> Unit>,
         newState: StateType
     ): Boolean {

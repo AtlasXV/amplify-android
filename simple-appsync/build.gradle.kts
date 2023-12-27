@@ -11,6 +11,8 @@ dependencies {
     api(project(":aws-auth-cognito"))
     api(project(":aws-api-appsync"))
     api(project(":aws-datastore"))
+    api(libs.aws.signing)
+    api(libs.aws.credentials)
     implementation(libs.okhttp)
     testImplementation(libs.test.junit)
     androidTestImplementation(libs.test.androidx.junit)

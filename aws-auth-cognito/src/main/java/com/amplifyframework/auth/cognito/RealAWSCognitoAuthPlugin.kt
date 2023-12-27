@@ -165,9 +165,13 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 
 internal class RealAWSCognitoAuthPlugin(
     private val configuration: AuthConfiguration,
@@ -176,8 +180,11 @@ internal class RealAWSCognitoAuthPlugin(
     private val logger: Logger
 ) : AuthCategoryBehavior {
 
+    private val configuringToken by lazy {
+        StateChangeListenerToken()
+    }
     private val lastPublishedHubEventName = AtomicReference<String>()
-
+    private val authStateReceived = AtomicBoolean(false)
     init {
         addAuthStateChangeListener()
         configureAuthStates()
@@ -207,6 +214,7 @@ internal class RealAWSCognitoAuthPlugin(
         )
         try {
             latch.await(10, TimeUnit.SECONDS)
+            checkInitializeState()
         } catch (e: Exception) {
             throw AmplifyException(
                 "Failed to configure auth plugin.",
@@ -215,15 +223,52 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
+    private fun isInitializeStateConfirmed(): Boolean {
+        return authStateMachine.getCurrentStateSync() is AuthState.Configured || authStateReceived.get()
+    }
+
+    private fun checkInitializeState() {
+        if (isInitializeStateConfirmed()) {
+            logger.debug("${this.javaClass.simpleName} checkInitializeState succeed(Thread=${Thread.currentThread().name})")
+            return
+        }
+        GlobalScope.launch {
+            logger.debug("checkInitializeState start")
+            delay(10_000)
+            val currentState = authStateMachine.getCurrentStateSync()
+            if (isInitializeStateConfirmed()) {
+                return@launch
+            }
+            authStateMachine.subscribers.entries.find {
+                it.key == configuringToken
+            }?.also {
+                val error = if (currentState is AuthState.Error) {
+                    currentState.exception
+                } else {
+                    AmplifyException("checkInitializeState timeout", "")
+                }
+                authStateMachine.notifySubscribers(
+                    subscriber = it,
+                    newState = AuthState.Error(error)
+                )
+                authStateMachine.cancel(configuringToken)
+            }
+            logger.debug("checkInitializeState finish")
+        }
+    }
+
     internal suspend fun suspendWhileConfiguring() {
+        val token = configuringToken
         return suspendCoroutine { continuation ->
-            val token = StateChangeListenerToken()
+            logger.debug("suspendWhileConfiguring start listen")
             authStateMachine.listen(
                 token,
                 {
                     if (it is AuthState.Configured || it is AuthState.Error) {
+                        authStateReceived.set(true)
                         authStateMachine.cancel(token)
                         continuation.resume(Unit)
+                        logger.debug("suspendWhileConfiguring receive state: $it")
                     }
                 },
                 { }
