@@ -110,22 +110,6 @@ class AmplifySimpleSyncComponent(
         }
     }
 
-    /**
-     *
-     * 检测并抛出异常，须在外部catch，否则崩溃
-     *
-     * 有的设备调用EncryptedSharedPreferences.create会崩溃
-     * 提前抛出此类异常，在不崩溃的情况下用户能正常使用，不过无法同步数据，但是可以跟随版本发布更新数据
-     *
-     */
-    fun preCheckCompat() {
-        val checkKey = "check_support"
-        val keyValueRepository = EncryptedKeyValueRepository(appContext, "app_check_device_support")
-        keyValueRepository.put(checkKey, "1")
-        val supportFlag = keyValueRepository.get(checkKey)
-        LOG.info("preCheckCompat: supportFlag=$supportFlag")
-    }
-
     private suspend fun queryAllData(request: GraphQLRequest<List<GraphQLResponse<PaginatedResult<ModelWithMetadata<Model>>>>>): List<List<ModelWithMetadata<Model>>> {
         val response = Amplify.API.query(request).data
         val responseItemGroups = response.map {
