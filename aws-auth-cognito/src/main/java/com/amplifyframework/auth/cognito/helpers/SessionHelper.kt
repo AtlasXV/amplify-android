@@ -67,7 +67,12 @@ internal object SessionHelper {
      * @return boolean to indicate if the AWS credentials are expired.
      */
     fun isValidSession(awsCredentials: AWSCredentials): Boolean {
-        val currentTimeStamp = Instant.now()
-        return currentTimeStamp < awsCredentials.expiration?.let { Instant.ofEpochSecond(it) }
+
+        /**
+         * 有低的概率出现"Attempt to read from field 'long java.time.Instant.seconds' on a null object reference"，需要先判null
+         */
+        val currentTimeStamp = Instant.now() ?: return false
+        val expirationInstant = awsCredentials.expiration?.let { Instant.ofEpochSecond(it) } ?: return false
+        return currentTimeStamp < expirationInstant
     }
 }
