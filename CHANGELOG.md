@@ -1,7 +1,17 @@
+## [Release 2.14.9](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.9)
+
+### Bug Fixes
+- **storage:** Remove work manager restricted API usage and upgrade lib. ([#2674](https://github.com/aws-amplify/amplify-android/issues/2674))
+
+### Miscellaneous
+- Fix CHANGELOG.md for v2.14.8 ([#2664](https://github.com/aws-amplify/amplify-android/issues/2664))
+
+[See all changes between 2.14.8 and 2.14.9](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.8...release_v2.14.9)
+
 ## [Release 2.14.8](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.14.8)
 
 ### Miscellaneous
-- **liveness:** add close codes to websocket apis ([#2638](https://github.com/aws-amplify/amplify-android/issues/2638))
+- **liveness:** add close codes to websocket apis ([#2658](https://github.com/aws-amplify/amplify-android/issues/2658))
 
 [See all changes between 2.14.7 and 2.14.8](https://github.com/aws-amplify/amplify-android/compare/release_v2.14.7...release_v2.14.8)
 
