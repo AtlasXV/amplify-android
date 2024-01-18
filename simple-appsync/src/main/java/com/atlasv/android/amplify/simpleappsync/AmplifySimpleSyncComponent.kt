@@ -39,7 +39,7 @@ class AmplifySimpleSyncComponent(
     private val mergeListFactory: MergeRequestFactory,
     sqlCommandFactoryFactory: SQLCommandFactoryFactory,
     cursorValueStringFactory: CursorValueStringFactory,
-    private val buildInDbMigrate: () -> Unit,
+    private val buildInDbMigrate: (String) -> Unit,
     private val onSqliteInitSuccess: () -> Unit,
     private val config: AmplifySimpleSyncConfig
 ) {

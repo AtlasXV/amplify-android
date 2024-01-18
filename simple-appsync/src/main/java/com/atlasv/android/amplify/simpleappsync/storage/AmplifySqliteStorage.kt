@@ -29,7 +29,7 @@ class AmplifySqliteStorage(
     val schemaRegistry: SchemaRegistry,
     sqlCommandFactoryFactory: SQLCommandFactoryFactory,
     cursorValueStringFactory: CursorValueStringFactory,
-    private val buildInDbMigrate: () -> Unit,
+    private val buildInDbMigrate: (String) -> Unit,
     private val config: AmplifySimpleSyncConfig,
     private val onSqliteInitSuccess: () -> Unit
 ) {

@@ -14,19 +14,21 @@ import java.io.File
 
 class AmplifyBuildInDbProvider(
     private val appContext: Context,
-    private val buildInDbMigrate: () -> Unit,
+    private val buildInDbMigrate: (String) -> Unit,
     private val config: AmplifySimpleSyncConfig,
     private val onSqliteInitSuccess: () -> Unit,
     private val extSettings: AmplifyExtSettings
 ) : AmplifyDbVersionCheckListener {
 
     private var updatedWithInnerDb = false
+    private val dbName = SQLiteStorageAdapter.DEFAULT_DATABASE_NAME
+
     override fun onSqliteInitializeStarted(modelsProvider: ModelProvider) {
         try {
             val extraVersion = config.extraVersion
-            val dbFile = appContext.getDatabasePath("AmplifyDatastore.db")
+            val dbFile = appContext.getDatabasePath(dbName)
             if (!dbFile.exists()) {
-                LOG.info("AmplifyDatastore.db not exists, need updateWithInnerDb.")
+                LOG.info("$dbName not exists, need updateWithInnerDb.")
                 updateWithInnerDb()
                 return
             }
@@ -57,7 +59,7 @@ class AmplifyBuildInDbProvider(
             LOG.debug("Already updateWithInnerDb, return")
             return
         }
-        buildInDbMigrate()
+        buildInDbMigrate(dbName)
         extSettings.saveExtraModelVersion(config.extraVersion)
         extSettings.saveLastSyncTimestamp(config.buildInDbUpdatedAt)
         updatedWithInnerDb = true
