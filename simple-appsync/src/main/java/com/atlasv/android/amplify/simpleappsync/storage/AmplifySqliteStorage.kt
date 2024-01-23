@@ -43,6 +43,7 @@ class AmplifySqliteStorage(
     }
 
     fun <T : Model> query(itemClass: Class<T>, options: QueryOptions): List<T>? {
+        val startMs = System.currentTimeMillis()
         return use { adapter ->
             adapter.sqlQueryProcessor?.queryOfflineData(itemClass, options) { cause ->
                 LOG.error("query ${itemClass.simpleName} error", cause)
@@ -60,7 +61,6 @@ class AmplifySqliteStorage(
             }?.let {
                 val result = filterModels(options, it)
                 val hasSortField = itemClass.hasSortField()
-                LOG.info("query ${itemClass.simpleName} count: ${result.size}, hasSortField=$hasSortField")
                 if (hasSortField) {
                     result.sortedBy { model ->
                         model.resolveMethod(MODEL_METHOD_GET_SORT)?.toIntOrNull() ?: 0
@@ -69,6 +69,8 @@ class AmplifySqliteStorage(
                     result
                 }
             }
+        }.also { result ->
+            LOG.info("query ${itemClass.simpleName} count: ${result?.size}, take ${System.currentTimeMillis() - startMs}ms")
         }
     }
 
