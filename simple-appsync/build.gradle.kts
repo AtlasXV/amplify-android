@@ -19,3 +19,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlin.coroutines)
 }
+
+android.kotlinOptions {
+    jvmTarget = "11"
+}
