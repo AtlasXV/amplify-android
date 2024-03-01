@@ -151,7 +151,7 @@ fun Project.configureAndroid() {
         compileSdk = 32
 
         defaultConfig {
-            minSdk = 24
+            minSdk = 26
             targetSdk = 30
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             testInstrumentationRunnerArguments += "clearPackageData" to "true"
