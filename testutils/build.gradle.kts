@@ -36,3 +36,9 @@ dependencies {
     // remove when modules are re-organized to provide better isolation
     compileOnly(project(":aws-api"))
 }
+android {
+    namespace = "com.amplifyframework.testutils"
+    buildFeatures {
+        buildConfig = true
+    }
+}

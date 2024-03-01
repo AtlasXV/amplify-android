@@ -58,7 +58,14 @@ dependencies {
     androidTestImplementation(libs.okhttp)
     androidTestImplementation(libs.oauth2)
 }
+android {
+    namespace = "com.amplifyframework.datastore"
+    testNamespace = "com.amplifyframework.datastore.test"
+    buildFeatures {
+        buildConfig = true
+    }
+}
 
 afterEvaluate {
-    android.kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
+    android.kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
 }

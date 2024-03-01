@@ -44,7 +44,13 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
 }
+android {
+    namespace = "com.amplifyframework.pinpoint.core"
+    buildFeatures {
+        buildConfig = true
+    }
+}
 
 android.kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "17"
 }

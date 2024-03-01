@@ -51,7 +51,13 @@ dependencies {
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(project(":aws-analytics-pinpoint"))
 }
+android {
+    namespace = "com.amplifyframework.analytics.pinpoint"
+    buildFeatures {
+        buildConfig = true
+    }
+}
 
 android.kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "17"
 }

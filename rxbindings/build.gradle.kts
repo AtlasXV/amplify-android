@@ -38,7 +38,13 @@ dependencies {
     testImplementation(libs.test.robolectric)
     testImplementation(project(":rxbindings"))
 }
+android {
+    namespace = "com.amplifyframework.rx"
+    buildFeatures {
+        buildConfig = true
+    }
+}
 
 android.kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "17"
 }

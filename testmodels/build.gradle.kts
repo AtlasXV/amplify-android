@@ -26,3 +26,9 @@ dependencies {
     testImplementation(project(":testutils"))
     testImplementation(libs.test.junit)
 }
+android {
+    namespace = "com.amplifyframework.testmodels"
+    buildFeatures {
+        buildConfig = true
+    }
+}

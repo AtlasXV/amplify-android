@@ -34,8 +34,14 @@ dependencies {
     testImplementation(libs.test.kotlin.coroutines)
     testImplementation(project(":testmodels"))
 }
+android {
+    namespace = "com.amplifyframework.kotlin"
+    buildFeatures {
+        buildConfig = true
+    }
+}
 
 android.kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "17"
     freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
 }

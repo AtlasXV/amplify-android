@@ -52,7 +52,13 @@ dependencies {
     androidTestImplementation(libs.test.androidx.workmanager)
     androidTestImplementation(project(":aws-storage-s3"))
 }
+android {
+    namespace = "com.amplifyframework.storage.s3"
+    buildFeatures {
+        buildConfig = true
+    }
+}
 
 android.kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "17"
 }

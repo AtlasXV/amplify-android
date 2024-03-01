@@ -45,3 +45,9 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
 }
+android {
+    namespace = "com.amplifyframework.pushnotifications.pinpoint"
+    buildFeatures {
+        buildConfig = true
+    }
+}

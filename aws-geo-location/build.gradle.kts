@@ -38,7 +38,13 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
 }
+android {
+    namespace = "com.amplifyframework.geo.location"
+    buildFeatures {
+        buildConfig = true
+    }
+}
 
 afterEvaluate {
-    android.kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
+    android.kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
 }

@@ -37,7 +37,13 @@ dependencies {
     testImplementation(project(":testmodels"))
     testImplementation(project(":testutils"))
 }
+android {
+    namespace = "com.amplifyframework.appsync"
+    buildFeatures {
+        buildConfig = true
+    }
+}
 
 android.kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "17"
 }

@@ -47,7 +47,13 @@ dependencies {
     testImplementation(libs.test.androidx.workmanager)
     testImplementation(project(":aws-logging-cloudwatch"))
 }
+android {
+    namespace = "com.amplifyframework.logging.cloudwatch"
+    buildFeatures {
+        buildConfig = true
+    }
+}
 
 android.kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "17"
 }

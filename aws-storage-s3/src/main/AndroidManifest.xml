@@ -14,8 +14,7 @@
    permissions and limitations under the License.
 -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.amplifyframework.storage.s3" >
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Permission will be merged into the manifest of the hosting app. -->
     <!-- Is required to launch foreground transfer service for targetSdkVersion 28+. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>

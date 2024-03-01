@@ -27,6 +27,10 @@ android {
     kotlinOptions {
         moduleName = "com.amplifyframework.annotations"
     }
+    namespace = "com.amplifyframework.annotations"
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 dependencies {

@@ -27,6 +27,10 @@ android {
     kotlinOptions {
         moduleName = "com.amplifyframework.aws-core"
     }
+    namespace = "com.amplifyframework.aws.core"
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 dependencies {

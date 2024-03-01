@@ -26,7 +26,11 @@ group = properties["POM_GROUP"].toString()
 
 android {
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+    namespace = "com.amplifyframework.plugins.core"
+    buildFeatures {
+        buildConfig = true
     }
 }
 

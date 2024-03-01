@@ -26,3 +26,9 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
 }
+android {
+    namespace = "com.amplifyframework.common.core"
+    buildFeatures {
+        buildConfig = true
+    }
+}

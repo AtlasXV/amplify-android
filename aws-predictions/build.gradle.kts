@@ -51,7 +51,13 @@ dependencies {
     androidTestImplementation(libs.test.mockk.android)
     androidTestImplementation(libs.rxjava)
 }
+android {
+    namespace = "com.amplifyframework.predictions.aws"
+    buildFeatures {
+        buildConfig = true
+    }
+}
 
 android.kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "17"
 }

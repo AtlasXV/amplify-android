@@ -19,7 +19,13 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlin.coroutines)
 }
+android {
+    namespace = "com.atlasv.android.amplify.simpleappsync"
+    buildFeatures {
+        buildConfig = true
+    }
+}
 
 android.kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "17"
 }

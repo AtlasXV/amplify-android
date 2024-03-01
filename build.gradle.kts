@@ -32,14 +32,14 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:7.3.1")
+        classpath("com.android.tools.build:gradle:8.3.0")
         classpath(kotlin("gradle-plugin", version = "1.9.10"))
         classpath("com.google.gms:google-services:4.3.15")
         classpath("org.jlleitschuh.gradle:ktlint-gradle:11.0.0")
         classpath("org.gradle:test-retry-gradle-plugin:1.4.1")
         classpath("org.jetbrains.kotlinx:kover:0.6.1")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.7.0")
-        classpath("com.atlasv.android.plugin:publishlib:1.1.2")
+        classpath("com.atlasv.android.plugin:publishlib:2.2.0")
     }
 }
 
@@ -82,6 +82,9 @@ val optInAnnotations = listOf(
 )
 
 subprojects {
+    if (name == "app"){
+        return@subprojects
+    }
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
 
     configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
@@ -145,7 +148,6 @@ fun Project.configureAndroid() {
     }
 
     configure<LibraryExtension> {
-        buildToolsVersion = "30.0.3"
         compileSdk = 32
 
         defaultConfig {
@@ -173,8 +175,8 @@ fun Project.configureAndroid() {
 
         compileOptions {
             isCoreLibraryDesugaringEnabled = true
-            sourceCompatibility = JavaVersion.VERSION_11
-            targetCompatibility = JavaVersion.VERSION_11
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
         }
 
         // Needed when running integration tests. The oauth2 library uses relies on two

@@ -25,10 +25,15 @@ group = properties["POM_GROUP"].toString()
 
 android {
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
     lint {
         disable += "GradleDependency"
+    }
+    namespace = "com.amplifyframework.geo.maplibre"
+    testNamespace = "com.amplifyframework.geo.maplibre.test"
+    buildFeatures {
+        buildConfig = true
     }
 }
 

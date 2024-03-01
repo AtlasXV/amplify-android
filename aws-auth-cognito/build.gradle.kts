@@ -67,7 +67,13 @@ dependencies {
     androidTestImplementation(project(":aws-api"))
     androidTestImplementation(project(":testutils"))
 }
+android {
+    namespace = "com.amplifyframework.auth.cognito"
+    buildFeatures {
+        buildConfig = true
+    }
+}
 
 android.kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "17"
 }

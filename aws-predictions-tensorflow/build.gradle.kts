@@ -33,3 +33,9 @@ dependencies {
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockito.core)
 }
+android {
+    namespace = "com.amplifyframework.predictions.tensorflow"
+    buildFeatures {
+        buildConfig = true
+    }
+}
