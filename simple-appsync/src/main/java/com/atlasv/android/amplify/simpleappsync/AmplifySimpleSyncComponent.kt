@@ -8,7 +8,6 @@ import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelProvider
 import com.amplifyframework.core.model.SchemaRegistry
-import com.amplifyframework.core.store.EncryptedKeyValueRepository
 import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.datastore.storage.sqlite.CursorValueStringFactory
@@ -25,7 +24,6 @@ import com.atlasv.android.amplify.simpleappsync.storage.AmplifySqliteStorage
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * weiping@atlasv.com
@@ -43,7 +41,7 @@ class AmplifySimpleSyncComponent(
     private val onSqliteInitSuccess: () -> Unit,
     private val config: AmplifySimpleSyncConfig
 ) {
-    private val extSettings by lazy {
+    val extSettings by lazy {
         AmplifyExtSettings(appContext)
     }
     private val mutex = Mutex()
