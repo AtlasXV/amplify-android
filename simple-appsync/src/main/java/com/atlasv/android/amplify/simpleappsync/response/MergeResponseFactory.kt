@@ -42,7 +42,6 @@ class MergeResponseFactory : GraphQLResponse.Factory {
             val dataObj = resObj.optJSONObject("data")
                 ?: error("No data in apiResponseJson, message=${getDataErrorMessage(resObj)}")
             val keys = dataObj.keys()
-
             val result = arrayListOf<Any>()
             for (k in keys) {
                 val modelObj = dataObj.opt(k)
@@ -52,6 +51,7 @@ class MergeResponseFactory : GraphQLResponse.Factory {
                 })
                 val childRequest = request.children.find { k == "list${it.queryModelName}" } ?: continue
                 result.add(gqlResponseFactory.buildResponse(childRequest, singleObj.toString(), apiName))
+                LOG.info("Build response child: $k, result items: ${result.size}")
             }
             checkErrors(resObj)
             LOG.info("Build merge response finish")
