@@ -67,23 +67,14 @@ class AmplifySimpleSyncComponent(
     suspend fun syncFromRemote(): AmplifySyncResponse? {
         return mutex.withLock {
             try {
-                var lastSync = extSettings.getLastSyncTimestamp()
-                val dataExpireInterval = config.dataExpireInterval
+                val lastSync = extSettings.getLastSyncTimestamp()
                 val grayRelease = config.grayRelease
                 val currentTime = System.currentTimeMillis()
-                val dataAge = currentTime - lastSync
-                var oldDataExpired = false
-                if (lastSync > 0 && dataAge > dataExpireInterval) {
-                    LOG.info("dataAge=${dataAge}ms, exceed $dataExpireInterval, need full sync")
-                    lastSync = 0
-                    oldDataExpired = true
-                }
-
                 val request = mergeListFactory.create(
                     appContext, dataStoreConfiguration, modelProvider, schemaRegistry, lastSync, grayRelease
                 )
                 val responseItemGroups = queryAllData(request)
-                val newestSyncTime = if (oldDataExpired) currentTime else responseItemGroups.maxOfOrNull { list ->
+                val newestSyncTime = responseItemGroups.maxOfOrNull { list ->
                     list.maxOfOrNull {
                         it.syncMetadata.lastChangedAt?.secondsSinceEpoch ?: 0L
                     } ?: 0L
