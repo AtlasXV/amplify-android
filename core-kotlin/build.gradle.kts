@@ -32,7 +32,6 @@ dependencies {
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(project(":testmodels"))
 }
 android {
     namespace = "com.amplifyframework.kotlin"

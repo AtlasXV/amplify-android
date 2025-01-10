@@ -46,8 +46,6 @@ dependencies {
 
     testImplementation(project(":aws-api-appsync"))
     // Used to reference Temporal types in tests.
-    testImplementation(project(":testmodels"))
-    testImplementation(project(":testutils"))
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockito.core)
     testImplementation(libs.test.mockito.inline)
@@ -59,7 +57,6 @@ dependencies {
     testImplementation(libs.gson)
 
     api("com.atlasv.android:timber:5.0.2")
-    androidTestImplementation(project(":testutils"))
     androidTestImplementation(libs.androidx.annotation)
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(libs.test.androidx.runner)

@@ -34,8 +34,6 @@ dependencies {
     implementation(libs.rxjava)
     implementation(libs.uuidgen)
 
-    testImplementation(project(":testmodels"))
-    testImplementation(project(":testutils"))
     testImplementation(libs.test.jsonassert)
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockito.core)
@@ -45,8 +43,6 @@ dependencies {
     testImplementation(libs.test.kotlin.coroutines)
 
     androidTestImplementation(libs.test.mockito.core)
-    androidTestImplementation(project(":testmodels"))
-    androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-api"))
     androidTestImplementation(project(":aws-datastore"))
     androidTestImplementation(libs.androidx.annotation)

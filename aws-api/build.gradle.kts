@@ -48,8 +48,6 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.okhttp)
 
-    testImplementation(project(":testutils"))
-    testImplementation(project(":testmodels"))
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.jsonassert)
     testImplementation(libs.test.junit)
@@ -61,8 +59,6 @@ dependencies {
     testImplementation(libs.test.robolectric)
     testImplementation(libs.test.kotlin.coroutines)
 
-    androidTestImplementation(project(":testutils"))
-    androidTestImplementation(project(":testmodels"))
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(project(":core-kotlin"))
     androidTestImplementation(libs.test.androidx.runner)

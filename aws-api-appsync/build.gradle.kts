@@ -34,8 +34,6 @@ dependencies {
     testImplementation(libs.test.junit)
     testImplementation(libs.test.robolectric)
     testImplementation(libs.test.jsonassert)
-    testImplementation(project(":testmodels"))
-    testImplementation(project(":testutils"))
 }
 android {
     namespace = "com.amplifyframework.appsync"

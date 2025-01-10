@@ -32,10 +32,6 @@ include(":common-core")
 include(":aws-api")
 include(":aws-datastore")
 
-// Test Utilities and assets
-include(":testutils")
-include(":testmodels")
-
 // Bindings and accessory modules
 include(":core-kotlin")
 include(":aws-api-appsync")
