@@ -3,7 +3,6 @@ package com.atlasv.android.amplify.simpleappsync.storage
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import com.amplifyframework.core.model.ModelProvider
-import com.amplifyframework.core.model.query.Where
 import com.amplifyframework.datastore.storage.sqlite.PersistentModelVersion
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
 import com.amplifyframework.datastore.storage.sqlite.migrations.AmplifyDbVersionCheckListener
@@ -28,42 +27,42 @@ class AmplifyBuildInDbProvider(
             val extraVersion = config.extraVersion
             val dbFile = appContext.getDatabasePath(dbName)
             if (!dbFile.exists()) {
-                LOG.info("$dbName not exists, need updateWithInnerDb.")
+                LOG?.d { "$dbName not exists, need updateWithInnerDb." }
                 updateWithInnerDb()
                 return
             }
             var oldVersion = getBuildInDbVersion(dbFile)
             val newVersion: String = modelsProvider.version()
             val customModelVersion = extSettings.getExtraModelVersion()
-            LOG.debug(
+            LOG?.d {
                 "updateWithInnerDb check: " +
                         "oldVersion=$oldVersion, newVersion=$newVersion, " +
                         "customModelVersion=$customModelVersion, extraVersion=$extraVersion"
-            )
+            }
             if (oldVersion != newVersion || customModelVersion != extraVersion) {
-                LOG.debug("Need updateWithInnerDb")
+                LOG?.d { "Need updateWithInnerDb" }
                 updateWithInnerDb()
             } else {
-                LOG.debug("No need to updateWithInnerDb")
+                LOG?.d { "No need to updateWithInnerDb" }
             }
             oldVersion = getBuildInDbVersion(dbFile)
             val isSuccess = oldVersion == newVersion
-            LOG.debug("After updateWithInnerDb: oldVersion=$oldVersion, isSuccess=${isSuccess}")
+            LOG?.d { "After updateWithInnerDb: oldVersion=$oldVersion, isSuccess=${isSuccess}" }
         } catch (cause: Throwable) {
-            LOG.error("onSqliteInitializeStarted failed", cause)
+            LOG?.e(cause) { "onSqliteInitializeStarted failed" }
         }
     }
 
     private fun updateWithInnerDb() {
         if (updatedWithInnerDb) {
-            LOG.debug("Already updateWithInnerDb, return")
+            LOG?.d { "Already updateWithInnerDb, return" }
             return
         }
         buildInDbMigrate(dbName)
         extSettings.saveExtraModelVersion(config.extraVersion)
         extSettings.saveLastSyncTimestamp(config.buildInDbUpdatedAt)
         updatedWithInnerDb = true
-        LOG.debug("updateWithInnerDb finish")
+        LOG?.d { "updateWithInnerDb finish" }
     }
 
     private fun getBuildInDbVersion(dbFile: File): String? {
@@ -79,7 +78,7 @@ class AmplifyBuildInDbProvider(
                 if (cursor.moveToFirst()) {
                     val modelId = cursor.getString(cursor.getColumnIndexOrThrow(idColumnName))
                     val modelVersion = cursor.getString(cursor.getColumnIndexOrThrow(versionColumnName))
-                    LOG.debug("getBuildInDbVersion: modelId=$modelId, modelVersion=$modelVersion")
+                    LOG?.d { "getBuildInDbVersion: modelId=$modelId, modelVersion=$modelVersion" }
                     modelVersion
                 } else {
                     null

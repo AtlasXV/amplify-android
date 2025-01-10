@@ -2,7 +2,6 @@ package com.atlasv.android.amplify.simpleappsync.ext
 
 import android.content.Context
 import androidx.core.content.edit
-import com.atlasv.android.amplify.simpleappsync.storage.AmplifyBuildInDbProvider
 
 /**
  * weiping@atlasv.com
@@ -12,10 +11,6 @@ import com.atlasv.android.amplify.simpleappsync.storage.AmplifyBuildInDbProvider
 class AmplifyExtSettings(private val appContext: Context) {
     private val amplifySettings by lazy {
         appContext.getSharedPreferences("sp_amplify_settings", Context.MODE_PRIVATE)
-    }
-
-    fun getLastSyncTimestamp(): Long {
-        return amplifySettings.getLong(KEY_SYNC_TIMESTAMP, 0)
     }
 
     fun saveLastSyncTimestamp(timestamp: Long?) {

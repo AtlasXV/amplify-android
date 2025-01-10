@@ -46,7 +46,7 @@ class AmplifySqliteStorage(
         val startMs = System.currentTimeMillis()
         return use { adapter ->
             adapter.sqlQueryProcessor?.queryOfflineData(itemClass, options) { cause ->
-                LOG.error("query ${itemClass.simpleName} error", cause)
+                LOG?.e(cause) { "query ${itemClass.simpleName} error" }
             }?.let { modelItems ->
                 val modelItemsDistinctById = modelItems.distinctBy { modelItem ->
                     modelItem.resolveIdentifier()
@@ -55,7 +55,7 @@ class AmplifySqliteStorage(
                  * 如果为一个Item在同一个区域配置重复的本地化，LEFT JOIN 会产生两条id相同的Item，这种情况下先给出错误提醒，需要在数据库侧移除多余的本地化项
                  */
                 if (modelItemsDistinctById.size != modelItems.size) {
-                    LOG.error("query ${itemClass.simpleName} has same ids: DistinctById=${modelItemsDistinctById.size}, modelItems=${modelItems.size}")
+                    LOG?.e { "query ${itemClass.simpleName} has same ids: DistinctById=${modelItemsDistinctById.size}, modelItems=${modelItems.size}" }
                 }
                 modelItemsDistinctById
             }?.let {
@@ -70,7 +70,7 @@ class AmplifySqliteStorage(
                 }
             }
         }.also { result ->
-            LOG.info("query ${itemClass.simpleName} count: ${result?.size}, take ${System.currentTimeMillis() - startMs}ms")
+            LOG?.d { "query ${itemClass.simpleName} count: ${result?.size}, take ${System.currentTimeMillis() - startMs}ms" }
         }
     }
 
@@ -92,29 +92,13 @@ class AmplifySqliteStorage(
             {
                 initializationsPending.countDown()
                 sqLiteStorageAdapter.dbVersionCheckListener?.onSqliteInitializedSuccess()
-                LOG.info("initSQLiteStorageAdapter finish")
+                LOG?.d { "initSQLiteStorageAdapter finish" }
             },
             {
-                LOG.error("initSQLiteStorageAdapter error", it)
+                LOG?.e(it) { "initSQLiteStorageAdapter error" }
             },
             dataStoreConfiguration
         )
-    }
-
-    fun <R> useTransaction(action: (SQLiteStorageAdapter) -> R): R? {
-        return use { adapter ->
-            val database = adapter.sqLiteDatabase!!
-            try {
-                database.beginTransaction()
-                action(adapter).also {
-                    database.setTransactionSuccessful()
-                }
-            } finally {
-                if (database.inTransaction()) {
-                    database.endTransaction()
-                }
-            }
-        }
     }
 
     fun <R> use(action: (SQLiteStorageAdapter) -> R): R? {
@@ -122,7 +106,7 @@ class AmplifySqliteStorage(
             initializationsPending.await()
             action(sqLiteStorageAdapter)
         } catch (cause: Throwable) {
-            LOG.error("use sqLiteStorageAdapter error", cause)
+            LOG?.e(cause) { "use sqLiteStorageAdapter error" }
             null
         }
     }

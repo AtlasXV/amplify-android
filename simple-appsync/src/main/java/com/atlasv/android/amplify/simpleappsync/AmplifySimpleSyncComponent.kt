@@ -6,11 +6,10 @@ import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.storage.sqlite.CursorValueStringFactory
 import com.amplifyframework.datastore.storage.sqlite.SQLCommandFactoryFactory
-import com.amplifyframework.kotlin.core.Amplify
 import com.atlasv.android.amplify.simpleappsync.config.AmplifySimpleSyncConfig
 import com.atlasv.android.amplify.simpleappsync.ext.AmplifyExtSettings
 import com.atlasv.android.amplify.simpleappsync.storage.AmplifySqliteStorage
-import kotlinx.coroutines.sync.Mutex
+import com.atlasv.android.amplify.simpleappsync.util.AmplifyLogger
 
 /**
  * weiping@atlasv.com
@@ -46,8 +45,6 @@ class AmplifySimpleSyncComponent(
     }
 
     companion object {
-        val LOG by lazy {
-            Amplify.Logging.forNamespace("amplify:simple-sync")
-        }
+        var LOG: AmplifyLogger? = null
     }
 }
