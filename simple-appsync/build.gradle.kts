@@ -7,6 +7,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 dependencies {
     api(project(":aws-api"))
     api(project(":aws-datastore"))
+    api(project(":aws-api-appsync"))
     implementation(libs.okhttp)
     testImplementation(libs.test.junit)
     androidTestImplementation(libs.test.androidx.junit)
