@@ -32,7 +32,6 @@ internal interface MutationOutbox {
      * Loads any/all previously unhandled mutations, from disk, into memory.
      * The [PendingMutation]s are taken out of durable storage.
      * That storage may still contain mutations, perhaps remaining from a previously-terminated session.
-     * These mutations should be processed whenever the [Orchestrator] comes online.
      * @return A Completable which succeeds when all mutations have been read from disk.
      */
     fun load(): Completable

@@ -19,19 +19,15 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.VoidResult;
 
@@ -222,31 +218,6 @@ public final class SynchronousStorageAdapter {
             resultSet.add(resultIterator.next());
         }
         return resultSet;
-    }
-
-    /**
-     * Query the storage adapter for models of a given class, and considering some additional criteria
-     * that each model must meet.
-     * @param modelClass Class of models being queried
-     * @param options Query options with predicate and pagination info
-     * @param <T> Type of model being queried
-     * @param onObservationStarted callback for canceling the subscription
-     * @param onQuerySnapshot callback for DataStoreQuerySnapshot
-     * @param onObservationError callback for DataStoreException
-     * @param onObservationComplete callback for onObservationComplete
-     */
-    public <T extends Model> void observeQuery(@NonNull Class<T> modelClass,
-                                               @NonNull ObserveQueryOptions options,
-                                               @NonNull Consumer<Cancelable> onObservationStarted,
-                                               @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
-                                               @NonNull Consumer<DataStoreException> onObservationError,
-                                               @NonNull Action onObservationComplete) {
-        asyncDelegate.observeQuery(modelClass,
-                options,
-                onObservationStarted,
-                onQuerySnapshot,
-                onObservationError,
-                onObservationComplete);
     }
 
     /**

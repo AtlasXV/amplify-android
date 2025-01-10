@@ -3,7 +3,6 @@ package com.atlasv.android.amplify.simpleappsync
 import android.content.Context
 import com.amplifyframework.core.model.ModelProvider
 import com.amplifyframework.core.model.SchemaRegistry
-import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.storage.sqlite.CursorValueStringFactory
 import com.amplifyframework.datastore.storage.sqlite.SQLCommandFactoryFactory
 import com.atlasv.android.amplify.simpleappsync.config.AmplifySimpleSyncConfig
@@ -17,7 +16,6 @@ import com.atlasv.android.amplify.simpleappsync.util.AmplifyLogger
  */
 class AmplifySimpleSyncComponent(
     private val appContext: Context,
-    val dataStoreConfiguration: DataStoreConfiguration,
     val modelProvider: ModelProvider,
     val schemaRegistry: SchemaRegistry,
     sqlCommandFactoryFactory: SQLCommandFactoryFactory,
@@ -32,7 +30,6 @@ class AmplifySimpleSyncComponent(
     val storage by lazy {
         AmplifySqliteStorage(
             appContext,
-            dataStoreConfiguration,
             extSettings,
             modelProvider,
             schemaRegistry,

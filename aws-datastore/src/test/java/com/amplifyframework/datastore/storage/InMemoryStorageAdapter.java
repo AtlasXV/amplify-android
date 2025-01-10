@@ -25,12 +25,10 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SerializedModel;
-import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -259,16 +257,6 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             onSubscriptionComplete::call
         );
         return disposable::dispose;
-    }
-
-    @Override
-    public <T extends Model> void observeQuery(@NonNull Class<T> itemClass,
-                                               @NonNull ObserveQueryOptions options,
-                                               @NonNull Consumer<Cancelable> onObservationStarted,
-                                               @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
-                                               @NonNull Consumer<DataStoreException> onObservationError,
-                                               @NonNull Action onObservationComplete) {
-        //TODOPM: to be implemented for tests.
     }
 
     @Override

@@ -156,9 +156,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     public SqlQueryProcessor sqlQueryProcessor;
 
-    private DataStoreConfiguration dataStoreConfiguration;
-    private SyncStatus syncStatus;
-
     /**
      * Construct the SQLiteStorageAdapter object.
      * @param schemaRegistry A registry of schema for all models and custom types used by the system
@@ -229,8 +226,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public synchronized void initialize(
             @NonNull Context context,
             @NonNull Consumer<List<ModelSchema>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError,
-            @NonNull DataStoreConfiguration dataStoreConfiguration) {
+            @NonNull Consumer<DataStoreException> onError) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
@@ -239,7 +235,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         this.threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * THREAD_POOL_SIZE_MULTIPLIER);
         this.context = context;
-        this.dataStoreConfiguration = dataStoreConfiguration;
         threadPool.submit(() -> {
             try {
                 if (dbVersionCheckListener != null) {
@@ -302,7 +297,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         sqlCommandFactory,
                         schemaRegistry);
                 sqlQueryProcessor.cursorValueStringFactory = cursorValueStringFactory;
-                syncStatus = new SyncStatus(sqlQueryProcessor, dataStoreConfiguration);
 
                 /*
                  * Detect if the version of the models stored in SQLite is different
@@ -783,33 +777,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void observeQuery(
-            @NonNull Class<T> itemClass,
-            @NonNull ObserveQueryOptions options,
-            @NonNull Consumer<Cancelable> onObservationStarted,
-            @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
-            @NonNull Consumer<DataStoreException> onObservationError,
-            @NonNull Action onObservationComplete) {
-        Objects.requireNonNull(onObservationStarted);
-        Objects.requireNonNull(onObservationError);
-        Objects.requireNonNull(onObservationComplete);
-        new ObserveQueryExecutor<>(itemChangeSubject, sqlQueryProcessor,
-                threadPool,
-                syncStatus,
-                new ModelSorter<T>(),
-                dataStoreConfiguration)
-                .observeQuery(itemClass,
-                        options,
-                        onObservationStarted,
-                        onQuerySnapshot,
-                        onObservationError,
-                        onObservationComplete);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public synchronized void terminate() throws DataStoreException {
         try {
             if (toBeDisposed != null) {
@@ -866,8 +833,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             exception -> onError.accept(new DataStoreException(
                 "Error occurred while trying to re-initialize the storage adapter",
                 String.valueOf(exception.getMessage())
-            )),
-                dataStoreConfiguration
+            ))
         );
     }
 
