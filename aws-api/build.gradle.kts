@@ -64,7 +64,6 @@ dependencies {
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":testmodels"))
     androidTestImplementation(libs.test.androidx.core)
-    androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(project(":core-kotlin"))
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)

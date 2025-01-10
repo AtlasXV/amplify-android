@@ -27,18 +27,10 @@ include(":annotations")
 include(":aws-core")
 include(":core")
 include(":common-core")
-include(":aws-auth-plugins-core")
 
 // Plugin Modules
-include(":aws-analytics-pinpoint")
 include(":aws-api")
-include(":aws-auth-cognito")
 include(":aws-datastore")
-include(":aws-geo-location")
-include(":aws-predictions")
-include(":aws-predictions-tensorflow")
-include(":aws-push-notifications-pinpoint")
-include(":aws-storage-s3")
 
 // Test Utilities and assets
 include(":testutils")
@@ -46,11 +38,6 @@ include(":testmodels")
 
 // Bindings and accessory modules
 include(":core-kotlin")
-include(":rxbindings")
 include(":aws-api-appsync")
-include(":maplibre-adapter")
-include(":aws-pinpoint-core")
-include(":aws-push-notifications-pinpoint-common")
-include(":aws-logging-cloudwatch")
 include(":simple-appsync")
 include(":app")

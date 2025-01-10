@@ -53,7 +53,6 @@ dependencies {
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
-    androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(libs.rxjava)
     androidTestImplementation(libs.okhttp)
     androidTestImplementation(libs.oauth2)
