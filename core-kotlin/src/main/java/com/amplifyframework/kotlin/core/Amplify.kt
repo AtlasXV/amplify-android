@@ -17,17 +17,9 @@ package com.amplifyframework.kotlin.core
 
 import android.content.Context
 import com.amplifyframework.AmplifyException
-import com.amplifyframework.analytics.AnalyticsCategory
 import com.amplifyframework.core.Amplify as delegate
 import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.plugin.Plugin
-import com.amplifyframework.kotlin.api.KotlinApiFacade
-import com.amplifyframework.kotlin.auth.KotlinAuthFacade
-import com.amplifyframework.kotlin.datastore.KotlinDataStoreFacade
-import com.amplifyframework.kotlin.geo.KotlinGeoFacade
-import com.amplifyframework.kotlin.hub.KotlinHubFacade
-import com.amplifyframework.kotlin.predictions.KotlinPredictionsFacade
-import com.amplifyframework.kotlin.storage.KotlinStorageFacade
 import com.amplifyframework.logging.LoggingCategory
 
 /**
@@ -39,15 +31,7 @@ import com.amplifyframework.logging.LoggingCategory
 @Suppress("unused")
 class Amplify {
     companion object {
-        val Analytics = AnalyticsCategory()
-        val API = KotlinApiFacade()
-        val Auth = KotlinAuthFacade()
-        val Geo = KotlinGeoFacade()
         val Logging = LoggingCategory()
-        val Storage = KotlinStorageFacade()
-        val Hub = KotlinHubFacade()
-        val DataStore = KotlinDataStoreFacade()
-        val Predictions = KotlinPredictionsFacade()
 
         /**
          * Configures the Amplify framework, considering the configuration
