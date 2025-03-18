@@ -68,7 +68,7 @@ fun File.getDbVersion(): String? {
             if (cursor.moveToFirst()) {
                 val modelId = cursor.getString(cursor.getColumnIndexOrThrow(idColumnName))
                 val modelVersion = cursor.getString(cursor.getColumnIndexOrThrow(versionColumnName))
-                LOG?.d { "getBuildInDbVersion: modelId=$modelId, modelVersion=$modelVersion" }
+                LOG?.d { "getBuildInDbVersion: modelId=$modelId, modelVersion=$modelVersion, file=${this.path}" }
                 modelVersion
             } else {
                 null

@@ -25,6 +25,8 @@ class AmplifyBuildInDbProvider(
             if (currentDbVersion != externalDbVersion) {
                 LOG?.d { "currentDbVersion=$currentDbVersion, externalDbVersion=${externalDbVersion}, need updateWithInnerDb" }
                 updateWithInnerDb()
+            } else {
+                LOG?.d { "currentDbVersion == externalDbVersion: ${currentDbVersion}" }
             }
         } catch (cause: Throwable) {
             LOG?.e(cause) { "onSqliteInitializeStarted failed" }
