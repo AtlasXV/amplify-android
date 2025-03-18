@@ -141,11 +141,6 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
         } else {
             state.set(State.INITIALIZED);
         }
-        HubChannel hubChannel = HubChannel.forCategoryType(getCategoryType());
-        InitializationStatus status = result.isFailure() ?
-            InitializationStatus.FAILED : InitializationStatus.SUCCEEDED;
-        Amplify.Hub.publish(hubChannel, HubEvent.create(status, result));
-
         return result;
     }
 
