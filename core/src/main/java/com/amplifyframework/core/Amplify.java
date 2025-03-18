@@ -27,7 +27,6 @@ import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.datastore.DataStoreCategory;
-import com.amplifyframework.devmenu.DeveloperMenu;
 import com.amplifyframework.geo.GeoCategory;
 import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.logging.AmplifyLoggerFactory;
@@ -146,10 +145,6 @@ public final class Amplify {
 
             // Configure User-Agent utility
             UserAgent.configure(configuration.getPlatformVersions());
-
-            if (configuration.isDevMenuEnabled()) {
-                DeveloperMenu.singletonInstance(context).enableDeveloperMenu();
-            }
 
             for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
                 if (category.getPlugins().size() > 0) {
