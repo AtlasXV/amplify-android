@@ -17,12 +17,10 @@ package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * A utility that creates ModelSchema from Model classes.
@@ -37,27 +35,6 @@ public final class SchemaRegistry {
     private SchemaRegistry() {
         modelSchemaMap = new HashMap<>();
         customTypeSchemaMap = new HashMap<>();
-    }
-
-    /**
-     * Computes ModelSchema for each of the provided models, and registers them.
-     * @param models the set that contains all the Model classes.
-     * @throws AmplifyException if unable to create a Model Schema for a model
-     */
-    public synchronized void register(@NonNull Set<Class<? extends Model>> models) throws AmplifyException {
-        for (Class<? extends Model> modelClass : models) {
-            final String modelClassName = modelClass.getSimpleName();
-            final ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);
-            SchemaRegistryUtils.registerSchema(modelSchemaMap, modelClassName, modelSchema);
-        }
-    }
-
-    /**
-     * Registers the modelSchemas provided.
-     * @param modelSchemas the map that contains mapping of ModelName to ModelSchema.
-     */
-    public synchronized void register(@NonNull Map<String, ModelSchema> modelSchemas) {
-        SchemaRegistryUtils.registerSchemas(modelSchemaMap, modelSchemas);
     }
 
     /**
