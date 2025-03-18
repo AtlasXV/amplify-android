@@ -30,7 +30,6 @@ include(":core")
 include(":aws-datastore")
 
 // Bindings and accessory modules
-include(":core-kotlin")
 include(":aws-api-appsync")
 include(":simple-appsync")
 include(":app")
