@@ -15,7 +15,6 @@
 
 package com.amplifyframework.core;
 
-import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.logging.AmplifyLoggerFactory;
 import com.amplifyframework.logging.LoggingCategory;
 
@@ -43,8 +42,6 @@ import com.amplifyframework.logging.LoggingCategory;
 public final class Amplify {
     // These static references provide an entry point to the different categories.
     // For example, you can call storage operations through Amplify.Storage.list(String path).
-    @SuppressWarnings("checkstyle:all")
-    public static final AnalyticsCategory Analytics = new AnalyticsCategory();
     @SuppressWarnings("checkstyle:all")
     public static final LoggingCategory Logging = new LoggingCategory();
     public static AmplifyLoggerFactory loggerFactory = new AmplifyLoggerFactory();
