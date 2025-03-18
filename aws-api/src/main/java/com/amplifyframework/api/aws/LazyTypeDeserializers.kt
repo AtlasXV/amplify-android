@@ -14,14 +14,8 @@
  */
 package com.amplifyframework.api.aws
 
-import com.amplifyframework.core.model.LoadedModelReferenceImpl
 import com.amplifyframework.core.model.Model
-import com.amplifyframework.core.model.ModelList
-import com.amplifyframework.core.model.ModelPage
-import com.amplifyframework.core.model.ModelReference
-import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
@@ -30,79 +24,6 @@ import java.lang.reflect.Type
 
 const val ITEMS_KEY = "items"
 const val NEXT_TOKEN_KEY = "nextToken"
-
-internal class ModelReferenceDeserializer<M : Model>(
-    val apiName: String?,
-    private val schemaRegistry: AWSApiSchemaRegistry
-) :
-    JsonDeserializer<ModelReference<M>> {
-    @Throws(JsonParseException::class)
-    override fun deserialize(
-        json: JsonElement,
-        typeOfT: Type,
-        context: JsonDeserializationContext
-    ): ModelReference<M> {
-        val pType = typeOfT as? ParameterizedType
-            ?: throw JsonParseException("Expected a parameterized type during list deserialization.")
-        val type = pType.actualTypeArguments[0] as Class<M>
-
-        val jsonObject = getJsonObject(json)
-
-        val predicateKeyMap = schemaRegistry
-            .getModelSchemaForModelClass(type)
-            .primaryIndexFields
-            .associateWith { jsonObject[it] }
-
-        if (jsonObject.size() > predicateKeyMap.size) {
-            try {
-                val preloadedValue = context.deserialize<M>(json, type)
-                return LoadedModelReferenceImpl(preloadedValue)
-            } catch (e: Exception) {
-                // fallback to create lazy
-            }
-        }
-        return ApiLazyModelReference(type, predicateKeyMap, apiName)
-    }
-}
-
-internal class ModelListDeserializer<M : Model> : JsonDeserializer<ModelList<M>> {
-    @Throws(JsonParseException::class)
-    override fun deserialize(
-        json: JsonElement,
-        typeOfT: Type,
-        context: JsonDeserializationContext
-    ): ModelList<M> {
-        val items = deserializeItems<M>(json, typeOfT, context)
-        return ApiLoadedModelList(items)
-    }
-
-    companion object {
-        @JvmStatic
-        fun register(builder: GsonBuilder) {
-            builder.registerTypeAdapter(ModelList::class.java, ModelListDeserializer<Model>())
-        }
-    }
-}
-
-internal class ModelPageDeserializer<M : Model> : JsonDeserializer<ModelPage<M>> {
-    @Throws(JsonParseException::class)
-    override fun deserialize(
-        json: JsonElement,
-        typeOfT: Type,
-        context: JsonDeserializationContext
-    ): ModelPage<M> {
-        val items = deserializeItems<M>(json, typeOfT, context)
-        val nextToken = deserializeNextToken(json)
-        return ApiModelPage(items, nextToken)
-    }
-
-    companion object {
-        @JvmStatic
-        fun register(builder: GsonBuilder) {
-            builder.registerTypeHierarchyAdapter(ModelPage::class.java, ModelPageDeserializer<Model>())
-        }
-    }
-}
 
 @Throws(JsonParseException::class)
 private fun getJsonObject(json: JsonElement): JsonObject {
@@ -139,10 +60,4 @@ private fun <M : Model> deserializeItems(
     return itemsJsonArray.map {
         context.deserialize(it.asJsonObject, type)
     }
-}
-@Throws(JsonParseException::class)
-private fun deserializeNextToken(json: JsonElement): ApiPaginationToken? {
-    return getJsonObject(json).get(NEXT_TOKEN_KEY)
-        ?.let { if (it.isJsonPrimitive) it.asString else null }
-        ?.let { ApiPaginationToken(it) }
 }

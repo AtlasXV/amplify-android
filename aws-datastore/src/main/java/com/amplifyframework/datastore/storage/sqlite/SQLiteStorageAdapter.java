@@ -214,7 +214,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         threadPool.submit(() -> {
             try {
                 if (dbVersionCheckListener != null) {
-                    dbVersionCheckListener.onSqliteInitializeStarted(modelsProvider);
+                    dbVersionCheckListener.onSqliteInitializeStarted();
                 }
                 /*
                  * Start with a fresh registry.

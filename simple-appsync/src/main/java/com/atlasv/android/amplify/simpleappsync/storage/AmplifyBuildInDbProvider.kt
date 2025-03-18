@@ -1,7 +1,6 @@
 package com.atlasv.android.amplify.simpleappsync.storage
 
 import android.content.Context
-import com.amplifyframework.core.model.ModelProvider
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
 import com.amplifyframework.datastore.storage.sqlite.migrations.AmplifyDbVersionCheckListener
 import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent.Companion.LOG
@@ -16,7 +15,7 @@ class AmplifyBuildInDbProvider(
 
     private val dbName = SQLiteStorageAdapter.DEFAULT_DATABASE_NAME
 
-    override fun onSqliteInitializeStarted(modelsProvider: ModelProvider) {
+    override fun onSqliteInitializeStarted() {
         try {
             val dbFile = appContext.getDatabasePath(dbName)
             val externalDbFile = externalDbFileSupplier.invoke()
