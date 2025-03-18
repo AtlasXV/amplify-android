@@ -26,7 +26,6 @@ import com.amplifyframework.kotlin.auth.KotlinAuthFacade
 import com.amplifyframework.kotlin.datastore.KotlinDataStoreFacade
 import com.amplifyframework.kotlin.geo.KotlinGeoFacade
 import com.amplifyframework.kotlin.hub.KotlinHubFacade
-import com.amplifyframework.kotlin.notifications.KotlinNotificationsFacade
 import com.amplifyframework.kotlin.predictions.KotlinPredictionsFacade
 import com.amplifyframework.kotlin.storage.KotlinStorageFacade
 import com.amplifyframework.logging.LoggingCategory
@@ -49,7 +48,6 @@ class Amplify {
         val Hub = KotlinHubFacade()
         val DataStore = KotlinDataStoreFacade()
         val Predictions = KotlinPredictionsFacade()
-        val Notifications = KotlinNotificationsFacade()
 
         /**
          * Configures the Amplify framework, considering the configuration

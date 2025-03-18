@@ -25,7 +25,6 @@ dependencyResolutionManagement {
 
 include(":annotations")
 include(":core")
-include(":common-core")
 
 // Plugin Modules
 include(":aws-api")

@@ -26,7 +26,6 @@ dependencies {
     implementation(libs.kotlin.coroutines)
     implementation(libs.androidx.core.ktx)
     implementation(project(":core"))
-    implementation(project(":common-core"))
 
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.junit)
