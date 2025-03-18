@@ -13,17 +13,9 @@ class AmplifyExtSettings(private val appContext: Context) {
         appContext.getSharedPreferences("sp_amplify_settings", Context.MODE_PRIVATE)
     }
 
-    fun saveLastSyncTimestamp(timestamp: Long?) {
-        timestamp ?: return
-        amplifySettings.edit {
-            putLong(KEY_SYNC_TIMESTAMP, timestamp)
-        }
-    }
-
     fun getExtraModelVersion(): Long {
         return amplifySettings.getLong(KEY_EXTRA_MODEL_VERSION, 0)
     }
-
 
     fun saveExtraModelVersion(extraVersion: Long) {
         amplifySettings.edit {
@@ -32,7 +24,6 @@ class AmplifyExtSettings(private val appContext: Context) {
     }
 
     companion object {
-        private const val KEY_SYNC_TIMESTAMP = "sync_timestamp"
         private const val KEY_EXTRA_MODEL_VERSION = "extra_model_version"
     }
 }

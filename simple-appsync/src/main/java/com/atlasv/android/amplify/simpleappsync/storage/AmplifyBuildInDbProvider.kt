@@ -60,7 +60,6 @@ class AmplifyBuildInDbProvider(
         }
         buildInDbMigrate(dbName)
         extSettings.saveExtraModelVersion(config.extraVersion)
-        extSettings.saveLastSyncTimestamp(config.buildInDbUpdatedAt)
         updatedWithInnerDb = true
         LOG?.d { "updateWithInnerDb finish" }
     }
