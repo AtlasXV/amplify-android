@@ -15,7 +15,6 @@
 
 package com.amplifyframework.util;
 
-import com.amplifyframework.api.graphql.GsonResponseAdapters;
 import com.amplifyframework.core.model.query.predicate.GsonPredicateAdapters;
 import com.amplifyframework.core.model.temporal.GsonTemporalAdapters;
 import com.amplifyframework.core.model.types.GsonJavaTypeAdapters;
@@ -51,7 +50,6 @@ public final class GsonFactory {
         GsonTemporalAdapters.register(builder);
         GsonJavaTypeAdapters.register(builder);
         GsonPredicateAdapters.register(builder);
-        GsonResponseAdapters.register(builder);
         ModelWithMetadataAdapter.register(builder);
         SerializedModelAdapter.register(builder);
         SerializedCustomTypeAdapter.register(builder);
