@@ -124,9 +124,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Nullable
     public AmplifyDbVersionCheckListener dbVersionCheckListener = null;
 
-    // The helper object to iterate through associated models of a given model.
-    private SQLiteModelTree sqliteModelTree;
-
     // Stores the reference to disposable objects for cleanup
     private final CompositeDisposable toBeDisposed;
 
@@ -234,14 +231,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * All database operations will happen through this handle.
                  */
                 databaseConnectionHandle = sqliteStorageHelper.getWritableDatabase();
-
-                /*
-                 * Create helper instance that can traverse through model relations.
-                 */
-                this.sqliteModelTree = new SQLiteModelTree(
-                    schemaRegistry,
-                    databaseConnectionHandle
-                );
 
                 /*
                  * Create a command processor which runs the actual SQL transactions.
