@@ -27,7 +27,6 @@ include(":annotations")
 include(":core")
 
 // Plugin Modules
-include(":aws-api")
 include(":aws-datastore")
 
 // Bindings and accessory modules

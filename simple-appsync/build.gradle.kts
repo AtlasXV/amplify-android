@@ -5,7 +5,6 @@ plugins {
 apply(from = rootProject.file("configuration/publishing.gradle"))
 
 dependencies {
-    api(project(":aws-api"))
     api(project(":aws-datastore"))
     api(project(":aws-api-appsync"))
     api(project(":core"))

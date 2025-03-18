@@ -42,7 +42,6 @@ dependencies {
     testImplementation(libs.test.kotlin.coroutines)
 
     androidTestImplementation(libs.test.mockito.core)
-    androidTestImplementation(project(":aws-api"))
     androidTestImplementation(libs.androidx.annotation)
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(libs.test.androidx.runner)
