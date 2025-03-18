@@ -15,8 +15,6 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import com.amplifyframework.util.Time;
-
 /**
  * Enum representing the type of initial sync.
  */
@@ -31,18 +29,4 @@ public enum SyncType {
      */
     DELTA;
 
-    /**
-     * Returns the type of sync based on when the last sync was executed and
-     * the configured sync interval.
-     * @param lastSyncTime Timestamp of when the last sync was executed.
-     * @param syncIntervalMs The maximum elapsed time before forcing a full sync.
-     * @return {@link #BASE} if (now - lastSyncTime) > syncIntervalMs, {@link #DELTA} otherwise.
-     */
-    public static SyncType fromSyncTimeAndThreshold(SyncTime lastSyncTime, long syncIntervalMs) {
-        if (SyncTime.never().equals(lastSyncTime)) {
-            return BASE;
-        }
-        long timeSinceLastSync = Time.now() - lastSyncTime.toLong();
-        return timeSinceLastSync > syncIntervalMs ? BASE : DELTA;
-    }
 }
