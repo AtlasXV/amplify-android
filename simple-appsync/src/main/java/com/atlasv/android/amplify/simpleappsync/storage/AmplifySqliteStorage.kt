@@ -9,11 +9,10 @@ import com.amplifyframework.datastore.storage.sqlite.CursorValueStringFactory
 import com.amplifyframework.datastore.storage.sqlite.SQLCommandFactoryFactory
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
 import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent.Companion.LOG
-import com.atlasv.android.amplify.simpleappsync.config.AmplifySimpleSyncConfig
-import com.atlasv.android.amplify.simpleappsync.ext.AmplifyExtSettings
 import com.atlasv.android.amplify.simpleappsync.ext.MODEL_METHOD_GET_SORT
 import com.atlasv.android.amplify.simpleappsync.ext.hasSortField
 import com.atlasv.android.amplify.simpleappsync.ext.resolveMethod
+import java.io.File
 import java.util.concurrent.CountDownLatch
 
 /**
@@ -22,13 +21,11 @@ import java.util.concurrent.CountDownLatch
  */
 class AmplifySqliteStorage(
     val appContext: Context,
-    val extSettings: AmplifyExtSettings,
     val modelProvider: ModelProvider,
     val schemaRegistry: SchemaRegistry,
     sqlCommandFactoryFactory: SQLCommandFactoryFactory,
     cursorValueStringFactory: CursorValueStringFactory,
-    private val buildInDbMigrate: (String) -> Unit,
-    private val config: AmplifySimpleSyncConfig,
+    private val externalDbFileSupplier: () -> File,
     private val onSqliteInitSuccess: () -> Unit
 ) {
     private val initializationsPending = CountDownLatch(1)
@@ -36,7 +33,7 @@ class AmplifySqliteStorage(
         it.sqlCommandFactoryFactory = sqlCommandFactoryFactory
         it.cursorValueStringFactory = cursorValueStringFactory
         it.dbVersionCheckListener =
-            AmplifyBuildInDbProvider(appContext, buildInDbMigrate, config, onSqliteInitSuccess, extSettings)
+            AmplifyBuildInDbProvider(appContext, externalDbFileSupplier, onSqliteInitSuccess)
         initSQLiteStorageAdapter(it)
     }
 

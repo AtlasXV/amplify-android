@@ -21,7 +21,6 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.storage.sqlite.PersistentModelVersion;
 import com.amplifyframework.datastore.syncengine.LastSyncMetadata;
-import com.amplifyframework.datastore.syncengine.PendingMutation;
 
 /**
  * Creates a provide of system models, that are used internally by the DataStore.
@@ -42,10 +41,6 @@ public final class SystemModelsProviderFactory {
     public static ModelProvider create() {
         return SimpleModelProvider.instance(
             SYSTEM_MODELS_VERSION,
-
-            // Used to create a persistent queue of mutations that need to be dispatched over
-            // the network.
-            PendingMutation.PersistentRecord.class,
 
             // Metadata about the last time a model type was successfully sync'd with the cloud.
             // For example, "Post" model was last saved at 1585702708000 milliseconds past the Epoch.

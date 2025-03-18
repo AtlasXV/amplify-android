@@ -42,7 +42,6 @@ dependencies {
     implementation(libs.androidx.security)
     implementation(libs.kotlin.serializationJson)
 
-    testImplementation(project(":aws-api-appsync"))
     // Used to reference Temporal types in tests.
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockito.core)

@@ -21,7 +21,6 @@ import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
@@ -40,15 +39,12 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
 import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
-import com.amplifyframework.core.model.query.ObserveQueryOptions;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
-import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.DataStoreQuerySnapshot;
 import com.amplifyframework.datastore.model.CompoundModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -196,26 +192,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             schemaRegistry,
             Objects.requireNonNull(userModelsProvider),
             SystemModelsProviderFactory.create()
-        );
-    }
-
-    /**
-     * Gets a SQLiteStorageAdapter that can be initialized to use the provided models.
-     * @param schemaRegistry Registry of schema for all models and custom types in the system
-     * @param userModelsProvider A provider of models that will be represented in SQL
-     * @param databaseName Name of the SQLite database.
-     * @return A SQLiteStorageAdapter that will host the provided models in SQL tables
-     */
-    @NonNull
-    static SQLiteStorageAdapter forModels(
-        @NonNull SchemaRegistry schemaRegistry,
-        @NonNull ModelProvider userModelsProvider,
-        @NonNull String databaseName) {
-        return new SQLiteStorageAdapter(
-            schemaRegistry,
-            Objects.requireNonNull(userModelsProvider),
-            SystemModelsProviderFactory.create(),
-            databaseName
         );
     }
 
