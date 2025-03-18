@@ -16,31 +16,21 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.model.CustomTypeField;
-import com.amplifyframework.core.model.CustomTypeSchema;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelAssociation;
-import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
-import com.amplifyframework.core.model.SerializedCustomType;
 import com.amplifyframework.core.model.SerializedModel;
 import com.amplifyframework.core.model.query.QueryOptions;
-import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
@@ -49,13 +39,11 @@ import com.amplifyframework.datastore.model.CompoundModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.datastore.storage.StorageOperation;
 import com.amplifyframework.datastore.storage.StorageResult;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.datastore.storage.sqlite.migrations.AmplifyDbVersionCheckListener;
 import com.amplifyframework.datastore.storage.sqlite.migrations.ModelMigrations;
-import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.Immutable;
@@ -63,12 +51,9 @@ import com.amplifyframework.util.Immutable;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -77,7 +62,6 @@ import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import io.reactivex.rxjava3.subjects.Subject;
 
@@ -146,10 +130,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Stores the reference to disposable objects for cleanup
     private final CompositeDisposable toBeDisposed;
 
-    // Need to keep a reference to the app context so we can
-    // re-initialize the adapter after deleting the file in the clear() method
-    private Context context;
-
     public SqlQueryProcessor sqlQueryProcessor;
 
     /**
@@ -210,7 +190,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         // OutOfMemoryError and CursorWindowAllocationException issues.
         this.threadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors() * THREAD_POOL_SIZE_MULTIPLIER);
-        this.context = context;
         threadPool.submit(() -> {
             try {
                 if (dbVersionCheckListener != null) {
@@ -293,93 +272,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     "Error in initializing the SQLiteStorageAdapter",
                     exception, "See attached exception"
                 ));
-            }
-        });
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <T extends Model> void batchSyncOperations(
-            @NonNull List<StorageOperation<T>> operations,
-            @NonNull Action onComplete,
-            @NonNull Consumer<DataStoreException> onError) {
-        if (operations.size() == 0) {
-            onComplete.call();
-            return;
-        }
-
-        TransactionBlock block = () -> {
-            for (StorageOperation<T> operation : operations) {
-                StorageResult<T> result = null;
-                if (operation instanceof StorageOperation.Create) {
-                    result = saveInternal(
-                            operation.getModel(),
-                            StorageItemChange.Initiator.SYNC_ENGINE,
-                            QueryPredicates.all()
-                    );
-                } else if (operation instanceof StorageOperation.Delete) {
-                    result = deleteInternal(
-                            operation.getModel(),
-                            StorageItemChange.Initiator.SYNC_ENGINE,
-                            QueryPredicates.all()
-                    );
-                }
-
-                if (result instanceof StorageResult.Success) {
-                    // If operation was successful, notify storage item change
-                    operation.getOnItemChange().accept(
-                            ((StorageResult.Success<T>) result).getStorageItemChange()
-                    );
-                } else if (result instanceof StorageResult.Failure && operation instanceof StorageOperation.Delete) {
-                    // If delete operation failed, assume record already deleted,
-                    // so attempt publish storage item change
-                    try {
-                        final ModelSchema modelSchema =
-                                schemaRegistry.getModelSchemaForModelClass(operation.getModel().getModelName());
-                        StorageItemChange<T> change = StorageItemChange.<T>builder()
-                                .item(operation.getModel())
-                                .patchItem(SerializedModel.create(operation.getModel(), modelSchema))
-                                .modelSchema(modelSchema)
-                                .type(StorageItemChange.Type.DELETE)
-                                .predicate(QueryPredicates.all())
-                                .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
-                                .build();
-                        operation.getOnItemChange().accept(change);
-                    } catch (Exception exception) {
-                        // do nothing
-                    }
-                } else if (result instanceof StorageResult.Failure) {
-                    DataStoreException exception = ((StorageResult.Failure<T>) result).getException();
-                    if (!ErrorInspector.contains(exception, SQLiteConstraintException.class)) {
-                        // If not a SQLiteConstraintException, we encountered an unrecoverable error
-                        // throw the exception and don't proceed
-                        LOG.warn(
-                                "Failed to sync remote model into local storage: $modelWithMetadata",
-                                exception
-                        );
-                        throw exception;
-                    } else {
-                        // LOG constraint violation errors and proceed
-                        LOG.warn(
-                                "Sync failed: foreign key constraint violation: $modelWithMetadata",
-                                exception
-                        );
-                    }
-                }
-            }
-        };
-
-        threadPool.submit(() -> {
-            try {
-                // We always want the transaction to succeed, even if an exception is thrown.
-                sqlCommandProcessor.runInTransactionAndSucceedOnDatastoreException(block);
-                // If no exception is thrown, we call onComplete Action.
-                onComplete.call();
-            } catch (DataStoreException exception) {
-                // If the transaction block encountered an uncaught exception, we call onError Consumer.
-                onError.accept(exception);
             }
         });
     }
@@ -495,324 +387,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         });
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void query(
-            @NonNull String modelName,
-            @NonNull QueryOptions options,
-            @NonNull Consumer<Iterator<? extends Model>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError) {
-        Objects.requireNonNull(modelName);
-        Objects.requireNonNull(options);
-        Objects.requireNonNull(onSuccess);
-        Objects.requireNonNull(onError);
-
-        threadPool.submit(() -> {
-            final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(modelName);
-            try (Cursor cursor = sqlCommandProcessor.rawQuery(sqlCommandFactory.queryFor(modelSchema, options))) {
-                LOG.debug("Querying item for: " + modelName);
-
-                final List<Model> models = new ArrayList<>();
-                final SQLiteModelFieldTypeConverter converter =
-                    new SQLiteModelFieldTypeConverter(modelSchema, schemaRegistry, gson);
-
-                if (cursor == null) {
-                    onError.accept(new DataStoreException(
-                            "Error in getting a cursor to the table for class: " + modelName,
-                            AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
-                    return;
-                }
-
-                if (cursor.moveToFirst()) {
-                    do {
-                        final Map<String, Object> data = converter.buildMapForModel(cursor);
-                        final SerializedModel model = createSerializedModel(modelSchema, data);
-                        models.add(model);
-                    } while (cursor.moveToNext());
-                }
-                onSuccess.accept(models.iterator());
-            } catch (Exception exception) {
-                onError.accept(new DataStoreException(
-                        "Error in querying the model.", exception,
-                        "See attached exception for details."
-                ));
-            }
-        });
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <T extends Model> void delete(
-            @NonNull T item,
-            @NonNull StorageItemChange.Initiator initiator,
-            @NonNull QueryPredicate predicate,
-            @NonNull Consumer<StorageItemChange<T>> onSuccess,
-            @NonNull Consumer<DataStoreException> onError
-    ) {
-        Objects.requireNonNull(item);
-        Objects.requireNonNull(initiator);
-        Objects.requireNonNull(predicate);
-        Objects.requireNonNull(onSuccess);
-        Objects.requireNonNull(onError);
-        threadPool.submit(() -> {
-            StorageResult<T> result = deleteInternal(item, initiator, predicate);
-            if (result instanceof StorageResult.Success) {
-                StorageResult.Success<T> success = (StorageResult.Success<T>) result;
-                onSuccess.accept(success.getStorageItemChange());
-            } else if (result instanceof StorageResult.Failure) {
-                StorageResult.Failure<T> failure = (StorageResult.Failure<T>) result;
-                onError.accept(failure.getException());
-            }
-        });
-    }
-
-    private <T extends Model> StorageResult<T> deleteInternal(
-            @NonNull T item,
-            @NonNull StorageItemChange.Initiator initiator,
-            @NonNull QueryPredicate predicate
-    ) {
-        try {
-            final String modelName = item.getModelName();
-            final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(modelName);
-
-            // Check if data being deleted exists; "Succeed" deletion in that case.
-            if (!sqlQueryProcessor.modelExists(item, QueryPredicates.all())) {
-                LOG.verbose(modelName + " model with id = " + item.getPrimaryKeyString() + " does not exist.");
-                // Pass back item change instance without publishing it.
-                return new StorageResult.Success<>(StorageItemChange.<T>builder()
-                        .item(item)
-                        .patchItem(SerializedModel.create(item, modelSchema))
-                        .modelSchema(modelSchema)
-                        .type(StorageItemChange.Type.DELETE)
-                        .predicate(predicate)
-                        .initiator(initiator)
-                        .build());
-            }
-
-            // Check if existing data meets the condition, only if a condition other than all() was provided.
-            if (!QueryPredicates.all().equals(predicate) && !sqlQueryProcessor.modelExists(item, predicate)) {
-                throw new DataStoreException(
-                        "Deletion failed because condition did not match existing model instance.",
-                        "The deletion will continue to fail until the model instance is updated."
-                );
-            }
-
-            // identify items affected by cascading delete before deleting them
-            List<Model> cascadedModels = sqliteModelTree.descendantsOf(Collections.singleton(item));
-
-            // execute local deletion
-            writeData(item, StorageItemChange.Type.DELETE);
-
-            // publish cascaded deletions
-            for (Model cascadedModel : cascadedModels) {
-                ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(cascadedModel.getModelName());
-                itemChangeSubject.onNext(StorageItemChange.builder()
-                        .item(cascadedModel)
-                        .patchItem(SerializedModel.create(cascadedModel, schema))
-                        .modelSchema(schema)
-                        .type(StorageItemChange.Type.DELETE)
-                        .predicate(QueryPredicates.all())
-                        .initiator(initiator)
-                        .build());
-            }
-
-            // publish successful deletion of top-level item
-            StorageItemChange<T> change = StorageItemChange.<T>builder()
-                    .item(item)
-                    .patchItem(SerializedModel.create(item, modelSchema))
-                    .modelSchema(modelSchema)
-                    .type(StorageItemChange.Type.DELETE)
-                    .predicate(predicate)
-                    .initiator(initiator)
-                    .build();
-            itemChangeSubject.onNext(change);
-            return new StorageResult.Success<>(change);
-        } catch (DataStoreException dataStoreException) {
-            return new StorageResult.Failure<>(dataStoreException);
-        } catch (Exception someOtherTypeOfException) {
-            DataStoreException dataStoreException = new DataStoreException(
-                    "Error in deleting the model.", someOtherTypeOfException,
-                    "See attached exception for details."
-            );
-            return new StorageResult.Failure<>(dataStoreException);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <T extends Model> void delete(
-            @NonNull Class<T> itemClass,
-            @NonNull StorageItemChange.Initiator initiator,
-            @NonNull QueryPredicate predicate,
-            @NonNull Action onSuccess,
-            @NonNull Consumer<DataStoreException> onError
-    ) {
-        Objects.requireNonNull(itemClass);
-        Objects.requireNonNull(initiator);
-        Objects.requireNonNull(predicate);
-        Objects.requireNonNull(onSuccess);
-        Objects.requireNonNull(onError);
-
-        threadPool.submit(() -> {
-            final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(itemClass);
-            QueryOptions options = Where.matches(predicate);
-            try (Cursor cursor = sqlCommandProcessor.rawQuery(sqlCommandFactory.queryFor(modelSchema, options))) {
-                final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
-                final List<String> primaryKeyNames = modelSchema.getPrimaryIndexFields();
-
-                // identify items that meet the predicate
-                List<T> items = new ArrayList<>();
-                if (cursor != null && cursor.moveToFirst()) {
-                    /** Populate the mapOfModelPrimaryKeys with the values of
-                     *  the primary key/ keys for the model**/
-                    do {
-                        HashMap<String, String> mapOfModelPrimaryKeys = new HashMap<>();
-                        for (String field : primaryKeyNames) {
-                            int index = cursor.getColumnIndexOrThrow(sqliteTable.getName() + "_" + field);
-                            String fieldValue = cursor.getString(index);
-                            mapOfModelPrimaryKeys.put(field, fieldValue);
-                        }
-                        String dummyJson = gson.toJson(mapOfModelPrimaryKeys);
-                        T dummyItem = gson.fromJson(dummyJson, itemClass);
-                        items.add(dummyItem);
-                    } while (cursor.moveToNext());
-                }
-
-                // identify every model to delete as a result of this operation
-                List<Model> modelsToDelete = new ArrayList<>(items);
-                List<Model> cascadedModels = sqliteModelTree.descendantsOf(items);
-                modelsToDelete.addAll(cascadedModels);
-
-                // execute local deletions
-                sqlCommandProcessor.execute(sqlCommandFactory.deleteFor(modelSchema, predicate));
-
-                // publish every deletion
-                for (Model model : modelsToDelete) {
-                    ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(model.getModelName());
-                    itemChangeSubject.onNext(StorageItemChange.builder()
-                            .item(model)
-                            .patchItem(SerializedModel.create(model, schema))
-                            .modelSchema(schema)
-                            .type(StorageItemChange.Type.DELETE)
-                            .predicate(QueryPredicates.all())
-                            .initiator(initiator)
-                            .build());
-                }
-                onSuccess.call();
-            } catch (DataStoreException dataStoreException) {
-                onError.accept(dataStoreException);
-            } catch (Exception someOtherTypeOfException) {
-                DataStoreException dataStoreException = new DataStoreException(
-                        "Error in deleting models.", someOtherTypeOfException,
-                        "See attached exception for details."
-                );
-                onError.accept(dataStoreException);
-            }
-        });
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public Cancelable observe(
-            @NonNull Consumer<StorageItemChange<? extends Model>> onItemChanged,
-            @NonNull Consumer<DataStoreException> onObservationError,
-            @NonNull Action onObservationComplete) {
-        Objects.requireNonNull(onItemChanged);
-        Objects.requireNonNull(onObservationError);
-        Objects.requireNonNull(onObservationComplete);
-        Disposable disposable = itemChangeSubject.subscribe(
-            onItemChanged::accept,
-            failure -> {
-                if (failure instanceof DataStoreException) {
-                    onObservationError.accept((DataStoreException) failure);
-                    return;
-                }
-                onObservationError.accept(new DataStoreException(
-                    "Failed to observe items in storage adapter.",
-                    failure,
-                    "Inspect the failure details."
-                ));
-            },
-            onObservationComplete::call
-        );
-        return disposable::dispose;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void terminate() throws DataStoreException {
-        try {
-            if (toBeDisposed != null) {
-                toBeDisposed.clear();
-            }
-            if (itemChangeSubject != null) {
-                itemChangeSubject.onComplete();
-            }
-            if (threadPool != null) {
-                threadPool.shutdown();
-            }
-            if (databaseConnectionHandle != null) {
-                databaseConnectionHandle.close();
-            }
-            if (sqliteStorageHelper != null) {
-                sqliteStorageHelper.close();
-            }
-        } catch (Exception exception) {
-            throw new DataStoreException("Error in terminating the SQLiteStorageAdapter.", exception,
-                    "See attached exception for details.");
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void clear(@NonNull Action onComplete,
-                                   @NonNull Consumer<DataStoreException> onError) {
-        try {
-            LOG.debug("Shutting down thread pool for the storage adapter.");
-            threadPool.shutdown();
-            if (!threadPool.awaitTermination(THREAD_POOL_TERMINATE_TIMEOUT, TimeUnit.MILLISECONDS)) {
-                threadPool.shutdownNow();
-            }
-            LOG.debug("Storage adapter thread pool shutdown.");
-        } catch (InterruptedException exception) {
-            LOG.warn("Storage adapter thread pool was interrupted during shutdown.", exception);
-        }
-        sqliteStorageHelper.close();
-        databaseConnectionHandle.close();
-        LOG.debug("Clearing DataStore.");
-        if (!context.deleteDatabase(databaseName)) {
-            DataStoreException dataStoreException = new DataStoreException(
-                "Error while trying to clear data from the local DataStore storage.",
-                "See attached exception for details.");
-            onError.accept(dataStoreException);
-        }
-        LOG.debug("DataStore cleared. Re-initializing storage adapter.");
-
-        //Re-initialize the adapter.
-        initialize(context,
-            schemaList -> onComplete.call(),
-            exception -> onError.accept(new DataStoreException(
-                "Error occurred while trying to re-initialize the storage adapter",
-                String.valueOf(exception.getMessage())
-            ))
-        );
-    }
-
     private CreateSqlCommands getCreateCommands(@NonNull Set<String> modelNames) {
         final Set<SqlCommand> createTableCommands = new HashSet<>();
         final Set<SqlCommand> createIndexCommands = new HashSet<>();
@@ -892,112 +466,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             PersistentModelVersion persistentModelVersion = new PersistentModelVersion(modelsProvider.version());
             return PersistentModelVersion.saveToLocalStorage(this, persistentModelVersion);
         }).ignoreElement();
-    }
-
-    /**
-     * recursively creates nested SerializedModels from raw data.
-     */
-    private SerializedModel createSerializedModel(ModelSchema modelSchema, Map<String, Object> data) {
-        final Map<String, Object> serializedData = new HashMap<>();
-        for (Map.Entry<String, Object> entry : data.entrySet()) {
-            ModelField field = modelSchema.getFields().get(entry.getKey());
-            if (field != null && entry.getValue() != null) {
-                if (field.isModel()) {
-                    ModelAssociation association = modelSchema.getAssociations().get(entry.getKey());
-                    if (association != null) {
-                        String associatedType = association.getAssociatedType();
-                        final ModelSchema nestedModelSchema = schemaRegistry.getModelSchemaForModelClass(
-                                associatedType
-                        );
-                        @SuppressWarnings("unchecked")
-                        SerializedModel model = createSerializedModel(
-                                nestedModelSchema, (Map<String, Object>) entry.getValue()
-                        );
-                        serializedData.put(entry.getKey(), model);
-                    }
-                } else if (field.isCustomType()) {
-                    if (field.isArray()) {
-                        @SuppressWarnings("unchecked")
-                        List<Map<String, Object>> listItems = (List<Map<String, Object>>) entry.getValue();
-                        List<SerializedCustomType> listOfCustomType =
-                                getValueOfListCustomTypeField(field.getTargetType(), listItems);
-                        serializedData.put(entry.getKey(), listOfCustomType);
-                    } else {
-                        final CustomTypeSchema nestedCustomTypeSchema =
-                                schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType());
-                        @SuppressWarnings("unchecked")
-                        SerializedCustomType customType = createSerializedCustomType(
-                                nestedCustomTypeSchema, (Map<String, Object>) entry.getValue()
-                        );
-                        serializedData.put(entry.getKey(), customType);
-                    }
-                } else {
-                    serializedData.put(entry.getKey(), entry.getValue());
-                }
-            }
-        }
-        return SerializedModel.builder()
-                .modelSchema(modelSchema)
-                .serializedData(serializedData)
-                .build();
-    }
-
-    private SerializedCustomType createSerializedCustomType(
-            CustomTypeSchema customTypeSchema, Map<String, Object> data) {
-        final Map<String, Object> serializedData = new HashMap<>();
-        for (Map.Entry<String, Object> entry : data.entrySet()) {
-            CustomTypeField field = customTypeSchema.getFields().get(entry.getKey());
-
-            if (field == null) {
-                continue;
-            }
-
-            if (field.isCustomType() && entry.getValue() != null) {
-                if (field.isArray()) {
-                    @SuppressWarnings("unchecked")
-                    List<Map<String, Object>> listItems = (List<Map<String, Object>>) entry.getValue();
-                    List<SerializedCustomType> listOfCustomType =
-                            getValueOfListCustomTypeField(field.getTargetType(), listItems);
-                    serializedData.put(entry.getKey(), listOfCustomType);
-                } else {
-                    final CustomTypeSchema nestedCustomTypeSchema =
-                            schemaRegistry.getCustomTypeSchemaForCustomTypeClass(field.getTargetType());
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> nestedData = (Map<String, Object>) entry.getValue();
-                    serializedData.put(entry.getKey(),
-                            createSerializedCustomType(nestedCustomTypeSchema, nestedData)
-                    );
-                }
-            } else {
-                serializedData.put(entry.getKey(), entry.getValue());
-            }
-        }
-
-        return SerializedCustomType.builder()
-                .serializedData(serializedData)
-                .customTypeSchema(customTypeSchema)
-                .build();
-    }
-
-    private List<SerializedCustomType> getValueOfListCustomTypeField(
-            String fieldTargetType, List<Map<String, Object>> listItems) {
-        // if the filed is optional and has null value instead of an array
-        if (listItems == null) {
-            return null;
-        }
-
-        final CustomTypeSchema nestedCustomTypeSchema =
-                schemaRegistry.getCustomTypeSchemaForCustomTypeClass(fieldTargetType);
-        List<SerializedCustomType> listOfCustomType = new ArrayList<>();
-
-        for (Map<String, Object> listItem : listItems) {
-            SerializedCustomType customType = createSerializedCustomType(
-                    nestedCustomTypeSchema, listItem
-            );
-            listOfCustomType.add(customType);
-        }
-
-        return listOfCustomType;
     }
 
     @Nullable
