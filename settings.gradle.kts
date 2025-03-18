@@ -24,7 +24,6 @@ dependencyResolutionManagement {
 }
 
 include(":annotations")
-include(":aws-core")
 include(":core")
 include(":common-core")
 

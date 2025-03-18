@@ -34,7 +34,6 @@ import java.util.Objects;
  * There is no compile-time guarantee that this class actually exists, or that it has that method,
  * or that we can use that method. But in the "happy path," this simplifies the amount of complexity
  * needed to begin using the API category. This utility class is used from
- * {@link com.amplifyframework.api.aws.AWSApiPlugin#initialize}.
  */
 final class ModelProviderLocator {
     private static final String DEFAULT_MODEL_PROVIDER_CLASS_NAME =

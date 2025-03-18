@@ -29,7 +29,6 @@ import okhttp3.OkHttpClient;
  * This hook is for advanced use cases, such as where a user may want to append some of
  * their own request headers, or otherwise manipulate an outgoing request.
  *
- * See {@link AWSApiPlugin.Builder#configureClient(String, OkHttpConfigurator)}
  * for more details.
  */
 @FunctionalInterface

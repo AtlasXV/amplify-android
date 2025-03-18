@@ -25,7 +25,6 @@ group = properties["POM_GROUP"].toString()
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":aws-core"))
     implementation(project(":aws-api-appsync"))
 
     implementation(libs.androidx.appcompat)
@@ -44,7 +43,6 @@ dependencies {
 
     androidTestImplementation(libs.test.mockito.core)
     androidTestImplementation(project(":aws-api"))
-    androidTestImplementation(project(":aws-datastore"))
     androidTestImplementation(libs.androidx.annotation)
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(libs.test.androidx.runner)

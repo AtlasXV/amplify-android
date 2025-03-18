@@ -40,7 +40,6 @@ android {
 
 dependencies {
     api(project(":core"))
-    api(project(":aws-core"))
     implementation(project(":aws-api-appsync"))
 
     implementation(libs.androidx.appcompat)
