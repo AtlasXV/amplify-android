@@ -38,7 +38,7 @@ buildscript {
         classpath("org.gradle:test-retry-gradle-plugin:1.4.1")
         classpath("org.jetbrains.kotlinx:kover:0.6.1")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.7.0")
-        classpath("com.atlasv.android.plugin:publishlib:2.3.0")
+        classpath(libs.publishlib)
     }
 }
 
