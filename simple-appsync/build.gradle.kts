@@ -8,6 +8,7 @@ dependencies {
     api(project(":aws-api"))
     api(project(":aws-datastore"))
     api(project(":aws-api-appsync"))
+    api(project(":core"))
     implementation(libs.okhttp)
     testImplementation(libs.test.junit)
     androidTestImplementation(libs.test.androidx.junit)

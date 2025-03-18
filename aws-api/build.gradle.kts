@@ -39,8 +39,6 @@ android {
 }
 
 dependencies {
-    api(project(":core"))
-
     implementation(libs.androidx.appcompat)
     implementation(libs.aws.signing)
     implementation(libs.gson)
@@ -58,7 +56,6 @@ dependencies {
     testImplementation(libs.test.kotlin.coroutines)
 
     androidTestImplementation(libs.test.androidx.core)
-    androidTestImplementation(project(":core-kotlin"))
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.rxjava)
