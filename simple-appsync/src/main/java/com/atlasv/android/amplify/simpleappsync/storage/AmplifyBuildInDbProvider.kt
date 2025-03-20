@@ -24,7 +24,7 @@ class AmplifyBuildInDbProvider(
             val externalDbFile = externalDbFileSupplier.invoke()
             val currentDbVersion = dbFile.getDbLastSyncTime()
             val externalDbVersion = externalDbFile.getDbLastSyncTime()
-            if (currentDbVersion < externalDbVersion) {
+            if (currentDbVersion <= 0 || currentDbVersion < externalDbVersion) {
                 logger?.w {
                     "currentDbVersion=$currentDbVersion, externalDbVersion=${externalDbVersion}, need updateWithInnerDb"
                 }
