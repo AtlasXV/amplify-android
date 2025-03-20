@@ -4,8 +4,8 @@ import android.database.sqlite.SQLiteDatabase
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
-import com.amplifyframework.datastore.storage.sqlite.PersistentModelVersion
-import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent.Companion.LOG
+import com.amplifyframework.datastore.syncengine.LastSyncMetadata
+import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent
 import java.io.File
 import java.lang.reflect.Method
 import java.text.SimpleDateFormat
@@ -51,28 +51,33 @@ fun QueryPredicate.then(newPredicate: QueryPredicate?): QueryPredicate {
     return this.and(newPredicate)
 }
 
-fun File.getDbVersion(): String? {
+fun File.getDbLastSyncTime(): Long {
     val dbFile = this
     if (!dbFile.exists()) {
-        return null
+        return 0L
     }
     val db = SQLiteDatabase.openDatabase(dbFile.path, null, 0)
-    val tableName = PersistentModelVersion::class.simpleName
-    return db.use {
-        val idColumnName = "${tableName}_id"
-        val versionColumnName = "${tableName}_version"
-        db.rawQuery(
-            "SELECT `${tableName}`.`id` AS `${idColumnName}`, `${tableName}`.`version` AS `${versionColumnName}` FROM `${tableName}`;",
-            null
-        ).use { cursor ->
-            if (cursor.moveToFirst()) {
-                val modelId = cursor.getString(cursor.getColumnIndexOrThrow(idColumnName))
-                val modelVersion = cursor.getString(cursor.getColumnIndexOrThrow(versionColumnName))
-                LOG?.d { "getBuildInDbVersion: modelId=$modelId, modelVersion=$modelVersion, file=${this.path}" }
-                modelVersion
-            } else {
+    val tableName = LastSyncMetadata::class.simpleName
+    return kotlin.runCatching {
+        db.use {
+            val idColumnName = "${tableName}_id"
+            val lastSyncTimeColumnName = "${tableName}_lastSyncTime"
+            db.rawQuery(
+                "SELECT `${tableName}`.`id` AS `${idColumnName}`, `${tableName}`.`lastSyncTime` AS `${lastSyncTimeColumnName}` FROM `${tableName}`;",
                 null
+            ).use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val modelId = cursor.getString(cursor.getColumnIndexOrThrow(idColumnName))
+                    val lastSyncTime = cursor.getLong(cursor.getColumnIndexOrThrow(lastSyncTimeColumnName))
+                    AmplifySimpleSyncComponent.defaultLogger?.w { "getDbLastSyncTime: modelId=$modelId, modelVersion=$lastSyncTime, file=${this.path}" }
+                    lastSyncTime
+                } else {
+                    0L
+                }
             }
         }
+    }.getOrElse {
+        AmplifySimpleSyncComponent.defaultLogger?.e(it) { "getDbLastSyncTime failed" }
+        0
     }
 }

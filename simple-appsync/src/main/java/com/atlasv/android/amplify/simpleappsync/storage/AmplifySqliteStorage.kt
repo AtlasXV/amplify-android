@@ -8,7 +8,7 @@ import com.amplifyframework.core.model.query.QueryOptions
 import com.amplifyframework.datastore.storage.sqlite.CursorValueStringFactory
 import com.amplifyframework.datastore.storage.sqlite.SQLCommandFactoryFactory
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
-import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent.Companion.LOG
+import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent
 import com.atlasv.android.amplify.simpleappsync.ext.MODEL_METHOD_GET_SORT
 import com.atlasv.android.amplify.simpleappsync.ext.hasSortField
 import com.atlasv.android.amplify.simpleappsync.ext.resolveMethod
@@ -28,6 +28,9 @@ class AmplifySqliteStorage(
     private val externalDbFileSupplier: () -> File,
     private val onSqliteInitSuccess: () -> Unit
 ) {
+    private val logger by lazy {
+        AmplifySimpleSyncComponent.loggerFactory?.invoke("amplify:sqlite-storage")
+    }
     private val initializationsPending = CountDownLatch(1)
     val sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider).also {
         it.sqlCommandFactoryFactory = sqlCommandFactoryFactory
@@ -41,7 +44,7 @@ class AmplifySqliteStorage(
         val startMs = System.currentTimeMillis()
         return use { adapter ->
             adapter.sqlQueryProcessor?.queryOfflineData(itemClass, options) { cause ->
-                LOG?.e(cause) { "query ${itemClass.simpleName} error" }
+                logger?.e(cause) { "query ${itemClass.simpleName} error" }
             }?.let { modelItems ->
                 val modelItemsDistinctById = modelItems.distinctBy { modelItem ->
                     modelItem.resolveIdentifier()
@@ -50,7 +53,7 @@ class AmplifySqliteStorage(
                  * 如果为一个Item在同一个区域配置重复的本地化，LEFT JOIN 会产生两条id相同的Item，这种情况下先给出错误提醒，需要在数据库侧移除多余的本地化项
                  */
                 if (modelItemsDistinctById.size != modelItems.size) {
-                    LOG?.e { "query ${itemClass.simpleName} has same ids: DistinctById=${modelItemsDistinctById.size}, modelItems=${modelItems.size}" }
+                    logger?.e { "query ${itemClass.simpleName} has same ids: DistinctById=${modelItemsDistinctById.size}, modelItems=${modelItems.size}" }
                 }
                 modelItemsDistinctById
             }?.let {
@@ -65,7 +68,7 @@ class AmplifySqliteStorage(
                 }
             }
         }.also { result ->
-            LOG?.d { "query ${itemClass.simpleName} count: ${result?.size}, take ${System.currentTimeMillis() - startMs}ms" }
+            logger?.d { "query ${itemClass.simpleName} count: ${result?.size}, take ${System.currentTimeMillis() - startMs}ms" }
         }
     }
 
@@ -87,10 +90,10 @@ class AmplifySqliteStorage(
             {
                 initializationsPending.countDown()
                 sqLiteStorageAdapter.dbVersionCheckListener?.onSqliteInitializedSuccess()
-                LOG?.d { "initSQLiteStorageAdapter finish" }
+                logger?.d { "initSQLiteStorageAdapter finish" }
             },
             {
-                LOG?.e(it) { "initSQLiteStorageAdapter error" }
+                logger?.e(it) { "initSQLiteStorageAdapter error" }
             }
         )
     }
@@ -100,7 +103,7 @@ class AmplifySqliteStorage(
             initializationsPending.await()
             action(sqLiteStorageAdapter)
         } catch (cause: Throwable) {
-            LOG?.e(cause) { "use sqLiteStorageAdapter error" }
+            logger?.e(cause) { "use sqLiteStorageAdapter error" }
             null
         }
     }

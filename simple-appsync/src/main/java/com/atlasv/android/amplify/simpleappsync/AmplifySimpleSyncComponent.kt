@@ -35,6 +35,9 @@ class AmplifySimpleSyncComponent(
     }
 
     companion object {
-        var LOG: AmplifyLogger? = null
+        var loggerFactory: ((tag: String) -> AmplifyLogger)? = null
+        val defaultLogger by lazy {
+            loggerFactory?.invoke("amplify:app")
+        }
     }
 }

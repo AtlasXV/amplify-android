@@ -3,8 +3,8 @@ package com.atlasv.android.amplify.simpleappsync.storage
 import android.content.Context
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter
 import com.amplifyframework.datastore.storage.sqlite.migrations.AmplifyDbVersionCheckListener
-import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent.Companion.LOG
-import com.atlasv.android.amplify.simpleappsync.ext.getDbVersion
+import com.atlasv.android.amplify.simpleappsync.AmplifySimpleSyncComponent
+import com.atlasv.android.amplify.simpleappsync.ext.getDbLastSyncTime
 import java.io.File
 
 class AmplifyBuildInDbProvider(
@@ -12,32 +12,40 @@ class AmplifyBuildInDbProvider(
     private val externalDbFileSupplier: () -> File,
     private val onSqliteInitSuccess: () -> Unit
 ) : AmplifyDbVersionCheckListener {
-
     private val dbName = SQLiteStorageAdapter.DEFAULT_DATABASE_NAME
+    private val logger by lazy {
+        AmplifySimpleSyncComponent.loggerFactory?.invoke("amplify:sqlite-storage")
+    }
 
     override fun onSqliteInitializeStarted() {
+        logger?.w { "onSqliteInitializeStarted" }
         try {
             val dbFile = appContext.getDatabasePath(dbName)
             val externalDbFile = externalDbFileSupplier.invoke()
-            val currentDbVersion = dbFile.getDbVersion()
-            val externalDbVersion = externalDbFile.getDbVersion()
-            if (currentDbVersion != externalDbVersion) {
-                LOG?.d { "currentDbVersion=$currentDbVersion, externalDbVersion=${externalDbVersion}, need updateWithInnerDb" }
-                updateWithInnerDb()
+            val currentDbVersion = dbFile.getDbLastSyncTime()
+            val externalDbVersion = externalDbFile.getDbLastSyncTime()
+            if (currentDbVersion < externalDbVersion) {
+                logger?.w {
+                    "currentDbVersion=$currentDbVersion, externalDbVersion=${externalDbVersion}, need updateWithInnerDb"
+                }
+                updateWithInnerDb(externalDbFile)
+                val newestDbLastSyncTime = appContext.getDatabasePath(dbName).getDbLastSyncTime()
+                logger?.w {
+                    "updateWithInnerDb finish, now currentDbVersion=${newestDbLastSyncTime}"
+                }
             } else {
-                LOG?.d { "currentDbVersion == externalDbVersion: ${currentDbVersion}" }
+                logger?.w { "currentDbVersion == externalDbVersion: $currentDbVersion, no need to update" }
             }
         } catch (cause: Throwable) {
-            LOG?.e(cause) { "onSqliteInitializeStarted failed" }
+            logger?.e(cause) { "onSqliteInitializeStarted failed" }
         }
     }
 
-    private fun updateWithInnerDb() {
+    private fun updateWithInnerDb(externalDbFile: File) {
         val db = appContext.getDatabasePath(dbName)
-        appContext.resources.assets.open(dbName).use { innerDb ->
+        externalDbFile.inputStream().use { innerDb ->
             db.outputStream().use { innerDb.copyTo(it) }
         }
-        LOG?.d { "updateWithInnerDb finish, now currentDbVersion=${appContext.getDatabasePath(dbName).getDbVersion()}" }
     }
 
     override fun onSqliteInitializedSuccess() {
