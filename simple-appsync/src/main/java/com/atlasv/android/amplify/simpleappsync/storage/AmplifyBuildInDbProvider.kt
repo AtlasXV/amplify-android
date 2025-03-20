@@ -34,7 +34,7 @@ class AmplifyBuildInDbProvider(
                     "updateWithInnerDb finish, now currentDbVersion=${newestDbLastSyncTime}"
                 }
             } else {
-                logger?.w { "currentDbVersion == externalDbVersion: $currentDbVersion, no need to update" }
+                logger?.w { "currentDbVersion - externalDbVersion = ${currentDbVersion - externalDbVersion}, no need to update" }
             }
         } catch (cause: Throwable) {
             logger?.e(cause) { "onSqliteInitializeStarted failed" }

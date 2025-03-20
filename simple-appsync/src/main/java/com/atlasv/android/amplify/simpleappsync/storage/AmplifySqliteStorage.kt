@@ -31,7 +31,7 @@ class AmplifySqliteStorage(
     private val logger by lazy {
         AmplifySimpleSyncComponent.loggerFactory?.invoke("amplify:sqlite-storage")
     }
-    private val initializationsPending = CountDownLatch(1)
+    val initializationsLatch = CountDownLatch(1)
     val sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider).also {
         it.sqlCommandFactoryFactory = sqlCommandFactoryFactory
         it.cursorValueStringFactory = cursorValueStringFactory
@@ -88,7 +88,7 @@ class AmplifySqliteStorage(
         sqLiteStorageAdapter.initialize(
             appContext,
             {
-                initializationsPending.countDown()
+                initializationsLatch.countDown()
                 sqLiteStorageAdapter.dbVersionCheckListener?.onSqliteInitializedSuccess()
                 logger?.d { "initSQLiteStorageAdapter finish" }
             },
@@ -100,7 +100,7 @@ class AmplifySqliteStorage(
 
     fun <R> use(action: (SQLiteStorageAdapter) -> R): R? {
         return try {
-            initializationsPending.await()
+            initializationsLatch.await()
             action(sqLiteStorageAdapter)
         } catch (cause: Throwable) {
             logger?.e(cause) { "use sqLiteStorageAdapter error" }
